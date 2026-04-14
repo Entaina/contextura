@@ -7,22 +7,21 @@
 
 import { DockviewComponent } from 'https://esm.sh/dockview-core@5'
 
+import * as api from './js/api.js'
+import * as storage from './js/storage.js'
+import { escapeHtml, lucideIcon } from './js/infra/dom.js'
+import { absoluteDateEs, firstName, relativeTimeEs } from './js/domain/date-es.js'
+import { versionTypeBadge } from './js/domain/version-badge.js'
+import { treeStore } from './js/state/tree-store.js'
+import { panelStore } from './js/state/panel-store.js'
+import { selectionStore } from './js/state/selection-store.js'
+
 // ============================================================
 // State
 // ============================================================
 
-let tree = []
-let selectedPath = null
-let selectedType = null
-
 /** @type {DockviewComponent} */
 let dockview = null
-
-/**
- * Per-panel state. Key = file path (also panel id).
- * @type {Map<string, { path: string, editor: any, isDirty: boolean, renderer: EditorPanelRenderer }>}
- */
-const panelState = new Map()
 
 let sidebarVisible = true
 let isRestoringLayout = false
@@ -41,18 +40,6 @@ const btnToggleSidebar = document.getElementById('btn-toggle-sidebar')
 const resizeHandle = document.getElementById('resize-handle')
 const dockviewContainer = document.getElementById('dockview-container')
 const sidebarShowBtn = document.getElementById('sidebar-show-btn')
-
-// ============================================================
-// Lucide icon helper
-// ============================================================
-
-function lucideIcon (name) {
-  const span = document.createElement('span')
-  span.className = 'lucide-icon'
-  span.innerHTML = `<i data-lucide="${name}"></i>`
-  if (window.lucide) lucide.createIcons({ elements: [span] })
-  return span
-}
 
 // ============================================================
 // Dockview Renderers
@@ -180,7 +167,7 @@ class EditorPanelRenderer {
     this._indicator.classList.remove('hidden')
     this._historyBtn.classList.remove('hidden')
     this._backBtn.classList.add('hidden')
-    const s = panelState.get(this._panelApi?.id)
+    const s = panelStore.get(this._panelApi?.id)
     if (s?.isDirty) {
       this._saveBtn.classList.remove('hidden')
       this._indicator.textContent = 'Sin guardar'
@@ -194,7 +181,7 @@ class EditorPanelRenderer {
   }
 
   async loadContent () {
-    const res = await fetch(`/api/file?path=${encodeURIComponent(this._path)}`)
+    const res = await api.getFile(this._path)
     if (!res.ok) {
       this._editorContainer.innerHTML = '<div class="tree-loading">No se pudo cargar el archivo.</div>'
       return
@@ -211,7 +198,7 @@ class EditorPanelRenderer {
     this._editor = new toastui.Editor({
       el: this._editorContainer,
       height: '100%',
-      initialEditType: localStorage.getItem(`contextura:edit-mode:${this._path}`) || 'wysiwyg',
+      initialEditType: storage.editMode.get(this._path) || 'wysiwyg',
       hideModeSwitch: false,
       initialValue: content,
       toolbarItems: [
@@ -246,8 +233,8 @@ class EditorPanelRenderer {
       this._originalContent = this._editor.getMarkdown()
     })
 
-    // Register in panelState
-    panelState.set(this._panelApi.id, {
+    // Register in panelStore
+    panelStore.set(this._panelApi.id, {
       path: this._path,
       editor: this._editor,
       isDirty: false,
@@ -258,11 +245,11 @@ class EditorPanelRenderer {
     this._saveBtn.classList.add('hidden')
 
     this._editor.on('changeMode', (mode) => {
-      localStorage.setItem(`contextura:edit-mode:${this._path}`, mode)
+      storage.editMode.set(this._path, mode)
     })
 
     this._editor.on('change', () => {
-      const s = panelState.get(this._panelApi.id)
+      const s = panelStore.get(this._panelApi.id)
       if (!s) return
       const currentContent = this._editor.getMarkdown()
       const dirty = currentContent !== this._originalContent
@@ -276,15 +263,11 @@ class EditorPanelRenderer {
   }
 
   async save () {
-    const s = panelState.get(this._panelApi.id)
+    const s = panelStore.get(this._panelApi.id)
     if (!s?.editor) return
 
     const markdown = s.editor.getMarkdown()
-    const res = await fetch(`/api/file?path=${encodeURIComponent(this._path)}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-      body: markdown,
-    })
+    const res = await api.putFile(this._path, markdown)
 
     if (res.ok) {
       this._originalContent = markdown
@@ -324,7 +307,7 @@ class EditorPanelRenderer {
       this._editor = null
     }
     if (this._panelApi) {
-      panelState.delete(this._panelApi.id)
+      panelStore.delete(this._panelApi.id)
     }
   }
 }
@@ -332,63 +315,6 @@ class EditorPanelRenderer {
 // ============================================================
 // History panel
 // ============================================================
-
-/** Formato fecha relativa en español (sin librería) */
-function relativeTimeEs (dateIso) {
-  const now = new Date()
-  const then = new Date(dateIso)
-  const diffSec = Math.round((now - then) / 1000)
-  if (diffSec < 60) return 'hace unos segundos'
-  const diffMin = Math.round(diffSec / 60)
-  if (diffMin < 60) return `hace ${diffMin} minuto${diffMin === 1 ? '' : 's'}`
-  const diffH = Math.round(diffMin / 60)
-  if (diffH < 24) return `hace ${diffH} hora${diffH === 1 ? '' : 's'}`
-  const diffD = Math.round(diffH / 24)
-  if (diffD === 1) return 'ayer'
-  if (diffD < 7) return `hace ${diffD} días`
-  const diffW = Math.round(diffD / 7)
-  if (diffW < 5) return `hace ${diffW} semana${diffW === 1 ? '' : 's'}`
-  const diffMo = Math.round(diffD / 30)
-  if (diffMo < 12) return `hace ${diffMo} ${diffMo === 1 ? 'mes' : 'meses'}`
-  const diffY = Math.round(diffD / 365)
-  return `hace ${diffY} año${diffY === 1 ? '' : 's'}`
-}
-
-function absoluteDateEs (dateIso) {
-  const d = new Date(dateIso)
-  return d.toLocaleString('es-ES', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-/** First name only, for compact author display */
-function firstName (fullName) {
-  if (!fullName) return 'Desconocido'
-  return fullName.split(/\s+/)[0]
-}
-
-/** Returns { icon: innerHTML, className, tooltip } for a version's change type */
-function versionTypeBadge (version) {
-  const s = version.status
-  const sim = version.similarity
-  // Inline SVGs — currentColor so they inherit via CSS
-  const ICON = {
-    add: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',
-    edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>',
-    move: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h5l2 2h11v10a2 2 0 0 1-2 2H3z"/><path d="M10 14l3-3 3 3M13 11v7"/></svg>',
-    copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
-  }
-  if (s === 'A') return { icon: ICON.add, className: 'type-add', tooltip: 'Creación del archivo' }
-  if (s === 'R' && sim === 100) return { icon: ICON.move, className: 'type-move', tooltip: 'Solo cambió la ubicación' }
-  if (s === 'R') return { icon: ICON.move + ICON.edit, className: 'type-move-edit', tooltip: 'Movido y editado' }
-  if (s === 'C') return { icon: ICON.copy, className: 'type-copy', tooltip: 'Copiado desde otra ruta' }
-  // M or T or fallback
-  return { icon: ICON.edit, className: 'type-edit', tooltip: 'Edición' }
-}
 
 /**
  * HistoryView — embeddable history viewer inside an EditorPanelRenderer.
@@ -473,9 +399,7 @@ class HistoryView {
   async loadHistory () {
     this._timeline.innerHTML = '<div class="history-empty">Cargando…</div>'
     try {
-      const res = await fetch(`/api/history?path=${encodeURIComponent(this._path)}`)
-      if (!res.ok) throw new Error('history fetch failed')
-      const data = await res.json()
+      const data = await api.getHistory(this._path)
       this._versions = data.versions || []
       this._hasUncommittedChanges = !!data.hasUncommittedChanges
       this._untracked = !!data.untracked
@@ -600,7 +524,7 @@ class HistoryView {
     this._restoreBtn.classList.add('hidden')
 
     try {
-      const newRes = await fetch(`/api/file?path=${encodeURIComponent(this._path)}`)
+      const newRes = await api.getFile(this._path)
       if (!newRes.ok) throw new Error('file fetch failed')
       const newContent = await newRes.text()
 
@@ -609,12 +533,7 @@ class HistoryView {
       let oldContent = ''
       if (this._versions.length > 0) {
         const head = this._versions[0]
-        const revPathParam = head.path
-          ? `&revPath=${encodeURIComponent(head.path)}`
-          : ''
-        const res = await fetch(
-          `/api/diff?path=${encodeURIComponent(this._path)}&rev=${encodeURIComponent(head.sha)}${revPathParam}`
-        )
+        const res = await api.getDiff(this._path, head.sha, head.path)
         if (res.ok) {
           const data = await res.json()
           oldContent = data.oldContent || ''
@@ -670,7 +589,7 @@ class HistoryView {
       if (dirty && this._versions.length > 0) {
         newContent = (await this._fetchContentAt(this._versions[0])) || ''
       } else {
-        const newRes = await fetch(`/api/file?path=${encodeURIComponent(this._path)}`)
+        const newRes = await api.getFile(this._path)
         if (!newRes.ok) throw new Error('file fetch failed')
         newContent = await newRes.text()
       }
@@ -845,13 +764,8 @@ class HistoryView {
 
   /** Fetch the raw content of the file as it existed in a given commit. */
   async _fetchContentAt (version) {
-    const revPathParam = version.path
-      ? `&revPath=${encodeURIComponent(version.path)}`
-      : ''
     try {
-      const res = await fetch(
-        `/api/content?path=${encodeURIComponent(this._path)}&rev=${encodeURIComponent(version.sha)}${revPathParam}`
-      )
+      const res = await api.getContentAt(this._path, version.sha, version.path)
       if (!res.ok) return null
       const data = await res.json()
       return data.content  // may be null if the file didn't exist at that commit
@@ -899,11 +813,7 @@ class HistoryView {
     )
     if (!ok) return
 
-    const res = await fetch(`/api/file?path=${encodeURIComponent(this._path)}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-      body: this._selectedOldContent,
-    })
+    const res = await api.putFile(this._path, this._selectedOldContent)
 
     if (res.ok) {
       this._restoreBtn.textContent = '✓ Restaurado'
@@ -963,7 +873,7 @@ class DirtyTabRenderer {
     this._close.addEventListener('click', (e) => {
       e.preventDefault()
       e.stopPropagation()
-      const s = panelState.get(this._api.id)
+      const s = panelStore.get(this._api.id)
       if (s?.isDirty) {
         if (!confirm('Hay cambios sin guardar. \u00BFCerrar sin guardar?')) return
       }
@@ -1010,7 +920,7 @@ function initDockview () {
     if (e?.id) {
       markActive(e.id)
       revealPath(e.id)
-      localStorage.setItem('contextura:last', e.id)
+      storage.lastFile.set(e.id)
     }
   })
 
@@ -1059,7 +969,7 @@ function initDockview () {
     dockview.addPanel(opts)
     markActive(path)
     revealPath(path)
-    localStorage.setItem('contextura:last', path)
+    storage.lastFile.set(path)
   })
 
   // Initial layout
@@ -1067,7 +977,7 @@ function initDockview () {
 
   // Restore layout or last file
   if (!restoreLayout()) {
-    const last = localStorage.getItem('contextura:last')
+    const last = storage.lastFile.get()
     if (last) openFile(last)
   }
 }
@@ -1112,11 +1022,11 @@ function setupResizeHandle () {
     resizeHandle.classList.remove('active')
     document.body.style.cursor = ''
     document.body.style.userSelect = ''
-    localStorage.setItem('contextura:sidebar-width', sidebarEl.offsetWidth)
+    storage.sidebarWidth.set(sidebarEl.offsetWidth)
   })
 
   // Restore saved width
-  const savedWidth = localStorage.getItem('contextura:sidebar-width')
+  const savedWidth = storage.sidebarWidth.get()
   if (savedWidth) sidebarEl.style.width = `${savedWidth}px`
 }
 
@@ -1129,7 +1039,7 @@ function toggleSidebar () {
   sidebarEl.classList.toggle('collapsed', !sidebarVisible)
   resizeHandle.classList.toggle('hidden', !sidebarVisible)
   sidebarShowBtn.classList.toggle('visible', !sidebarVisible)
-  localStorage.setItem('contextura:sidebar-visible', sidebarVisible ? '1' : '0')
+  storage.sidebarVisible.set(sidebarVisible)
   // Re-layout dockview after sidebar animation
   setTimeout(() => layoutDockview(), 200)
 }
@@ -1162,18 +1072,17 @@ async function openFile (path, event) {
   }
   dockview.addPanel(opts)
 
-  selectedPath = path
-  selectedType = 'file'
+  selectionStore.setFile(path)
   markActive(path)
   revealPath(path)
-  localStorage.setItem('contextura:last', path)
+  storage.lastFile.set(path)
 }
 
 function saveActiveFile () {
   if (!dockview) return
   const active = dockview.activePanel
   if (!active) return
-  const s = panelState.get(active.id)
+  const s = panelStore.get(active.id)
   if (s?.renderer) s.renderer.save()
 }
 
@@ -1241,8 +1150,7 @@ function createTreeNode (node, depth) {
 
     item.addEventListener('click', (e) => {
       e.stopPropagation()
-      selectedPath = node.path
-      selectedType = 'dir'
+      selectionStore.setDir(node.path)
       markActive(node.path)
       const isOpen = children.classList.contains('open')
       children.classList.toggle('open', !isOpen)
@@ -1295,7 +1203,7 @@ function refreshTree () {
   const openPaths = new Set()
   fileTreeEl.querySelectorAll('.tree-item.dir.open').forEach(el => openPaths.add(el.dataset.path))
 
-  renderTree(tree, fileTreeEl)
+  renderTree(treeStore.get(), fileTreeEl)
 
   if (openPaths.size > 0) restoreOpenDirs(fileTreeEl, openPaths)
   if (dockview?.activePanel) markActive(dockview.activePanel.id)
@@ -1309,7 +1217,7 @@ function restoreOpenDirs (container, openPaths) {
       if (children) {
         item.classList.add('open')
         children.classList.add('open')
-        const node = findNodeByPath(tree, item.dataset.path)
+        const node = treeStore.findByPath(item.dataset.path)
         if (node && children.childElementCount === 0) {
           const depth = Math.floor((parseInt(item.style.paddingLeft) - 8) / 14)
           renderTreeChildren(node.children, children, depth)
@@ -1317,14 +1225,6 @@ function restoreOpenDirs (container, openPaths) {
       }
     }
   })
-}
-
-function findNodeByPath (nodes, path) {
-  for (const node of nodes) {
-    if (node.path === path) return node
-    if (node.children) { const f = findNodeByPath(node.children, path); if (f) return f }
-  }
-  return null
 }
 
 function markActive (path) {
@@ -1344,7 +1244,7 @@ function revealPath (path) {
       if (children && !children.classList.contains('open')) {
         dirItem.classList.add('open')
         children.classList.add('open')
-        const node = findNodeByPath(tree, cumPath)
+        const node = treeStore.findByPath(cumPath)
         if (node && children.childElementCount === 0) {
           const depth = Math.floor((parseInt(dirItem.style.paddingLeft) - 8) / 14)
           renderTreeChildren(node.children, children, depth + 1)
@@ -1361,11 +1261,11 @@ function revealPath (path) {
 searchInput.addEventListener('input', () => {
   const query = searchInput.value.trim()
   if (!query) {
-    renderTree(tree, fileTreeEl)
+    renderTree(treeStore.get(), fileTreeEl)
     if (dockview?.activePanel) { revealPath(dockview.activePanel.id); markActive(dockview.activePanel.id) }
     return
   }
-  const filtered = filterTree(query, tree)
+  const filtered = filterTree(query, treeStore.get())
   renderFilteredTree(filtered, fileTreeEl, query)
 })
 
@@ -1434,7 +1334,7 @@ function startInlineCreate (parentPath, type, depth, childrenEl, folderItemEl) {
     childrenEl.classList.add('open')
     folderItemEl.classList.add('open')
     if (childrenEl.childElementCount === 0) {
-      const node = findNodeByPath(tree, parentPath)
+      const node = treeStore.findByPath(parentPath)
       if (node) renderTreeChildren(node.children, childrenEl, depth + 1)
     }
   }
@@ -1508,11 +1408,13 @@ function handleHeaderCreate (type) {
   let childrenEl = fileTreeEl
   let folderItemEl = null
 
+  const selPath = selectionStore.path
+  const selType = selectionStore.type
   let contextPath = null
-  if (selectedType === 'dir' && selectedPath) {
-    contextPath = selectedPath
-  } else if (selectedPath) {
-    const parts = selectedPath.split('/')
+  if (selType === 'dir' && selPath) {
+    contextPath = selPath
+  } else if (selPath) {
+    const parts = selPath.split('/')
     parts.pop()
     contextPath = parts.join('/') || null
   }
@@ -1533,11 +1435,7 @@ function handleHeaderCreate (type) {
 }
 
 async function createFile (path) {
-  const res = await fetch(`/api/file?path=${encodeURIComponent(path)}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-    body: '',
-  })
+  const res = await api.putFile(path, '')
   if (!res.ok) { alert('No se pudo crear el archivo.'); return }
   await loadTree()
   refreshTree()
@@ -1593,7 +1491,7 @@ function setupSSE () {
         if (!searchInput.value.trim()) refreshTree()
       })
       // Reload any open panel for this file (if not dirty and not just saved by this client)
-      for (const s of panelState.values()) {
+      for (const s of panelStore.values()) {
         if (data.path.endsWith(s.path) && !s.isDirty) {
           if (!s.renderer.consumeJustSaved()) {
             s.renderer.loadContent()
@@ -1610,7 +1508,6 @@ function setupSSE () {
 // Layout persistence
 // ============================================================
 
-const LAYOUT_KEY = 'contextura:layout'
 let _saveTimer = null
 
 function scheduleSaveLayout () {
@@ -1624,7 +1521,7 @@ function saveLayout () {
     const data = dockview.toJSON()
     // Only save if there are panels — avoid overwriting with empty state
     if (data?.panels && Object.keys(data.panels).length > 0) {
-      localStorage.setItem(LAYOUT_KEY, JSON.stringify(data))
+      storage.layout.set(JSON.stringify(data))
     }
   } catch (e) {
     console.warn('Failed to save layout', e)
@@ -1632,7 +1529,7 @@ function saveLayout () {
 }
 
 function restoreLayout () {
-  const saved = localStorage.getItem(LAYOUT_KEY)
+  const saved = storage.layout.get()
   if (!saved) return false
   try {
     const data = JSON.parse(saved)
@@ -1646,7 +1543,7 @@ function restoreLayout () {
   } catch (e) {
     isRestoringLayout = false
     console.warn('Failed to restore layout', e)
-    localStorage.removeItem(LAYOUT_KEY)
+    storage.layout.remove()
     return false
   }
 }
@@ -1656,16 +1553,7 @@ function restoreLayout () {
 // ============================================================
 
 async function loadTree () {
-  const res = await fetch('/api/tree')
-  tree = await res.json()
-}
-
-// ============================================================
-// Utils
-// ============================================================
-
-function escapeHtml (str) {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  treeStore.set(await api.getTree())
 }
 
 // ============================================================
@@ -1675,7 +1563,7 @@ function escapeHtml (str) {
 async function init () {
   await loadTree()
 
-  renderTree(tree, fileTreeEl)
+  renderTree(treeStore.get(), fileTreeEl)
   if (window.lucide) lucide.createIcons()
 
   initDockview()
@@ -1684,8 +1572,7 @@ async function init () {
   setupKeybindings()
 
   // Restore sidebar state
-  const savedSidebarVisible = localStorage.getItem('contextura:sidebar-visible')
-  if (savedSidebarVisible === '0') {
+  if (!storage.sidebarVisible.get()) {
     sidebarVisible = true
     toggleSidebar()
   }
@@ -1710,7 +1597,7 @@ async function init () {
         case 'toggle-history': {
           const active = dockview?.activePanel
           if (!active) return
-          const state = panelState.get(active.id)
+          const state = panelStore.get(active.id)
           const renderer = state?.renderer
           if (!renderer) return
           if (renderer._mode === 'history') renderer._exitHistoryMode()

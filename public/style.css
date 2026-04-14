@@ -362,6 +362,88 @@ body {
   overflow: hidden;
 }
 
+/* ---- Context pane (right side, per-file contextual modules) ---- */
+
+#context-pane {
+  width: 320px;
+  min-width: 220px;
+  max-width: 50vw;
+  background: var(--surface);
+  color: var(--text);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: width 0.15s ease, min-width 0.15s ease, opacity 0.15s ease;
+}
+
+#context-pane.collapsed {
+  width: 0 !important;
+  min-width: 0 !important;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.context-pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  height: var(--header-height);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.context-pane-title {
+  font-family: var(--font-display, 'Space Grotesk', sans-serif);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  opacity: 0.85;
+}
+
+.context-pane-header .icon-btn {
+  background: transparent;
+  border: 0;
+  color: var(--text-subtle);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.context-pane-header .icon-btn:hover {
+  color: var(--text);
+  background: var(--surface-alt);
+}
+.context-pane-header .icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+#context-pane-body {
+  flex: 1;
+  overflow: auto;
+  padding: 12px;
+}
+
+.context-empty {
+  color: var(--text-subtle);
+  font-size: 12px;
+  text-align: center;
+  padding: 24px 8px;
+}
+
+.sidebar-show-btn-right {
+  left: auto;
+  right: 8px;
+}
+
 /* ---- Dockview theme overrides ---- */
 
 /* Tabs container: cabecera Innovation clarita (copperfield-50).

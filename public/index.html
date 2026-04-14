@@ -62,9 +62,30 @@
     <div id="dockview-container"></div>
   </main>
 
+  <!-- Right resize handle (between main and context pane) -->
+  <div id="context-resize-handle" class="resize-handle resize-handle-right"></div>
+
+  <!-- Context pane: per-file contextual modules (history, etc.) -->
+  <aside id="context-pane">
+    <div class="context-pane-header">
+      <span class="context-pane-title">Contexto</span>
+      <button id="btn-toggle-context-pane" title="Ocultar panel contextual (⌘⌥B)" class="icon-btn">
+        <i data-lucide="panel-right-close"></i>
+      </button>
+    </div>
+    <div id="context-pane-body">
+      <div class="context-empty">Selecciona un fichero</div>
+    </div>
+  </aside>
+
   <!-- Show sidebar button (visible when sidebar hidden) -->
   <button id="sidebar-show-btn" class="sidebar-show-btn" title="Mostrar sidebar (⌘B)">
     <i data-lucide="panel-left-open"></i>
+  </button>
+
+  <!-- Show context pane button (visible when collapsed) -->
+  <button id="context-pane-show-btn" class="sidebar-show-btn sidebar-show-btn-right" title="Mostrar panel contextual (⌘⌥B)">
+    <i data-lucide="panel-right-open"></i>
   </button>
 
   <script src="/public/app.js" type="module"></script>

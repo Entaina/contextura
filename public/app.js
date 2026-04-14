@@ -24,6 +24,7 @@ import {
   refreshTree,
 } from './js/ui/tree.js'
 import { initSidebar, toggleSidebar } from './js/ui/sidebar.js'
+import { initContextPane, toggleContextPane } from './js/ui/context-pane/context-pane.js'
 import { initKeybindings } from './js/ui/keybindings.js'
 
 const searchInput = document.getElementById('search-input')
@@ -35,6 +36,7 @@ async function init () {
   const dv = initDockview()
 
   initSidebar({ onLayoutChange: dv.layoutDockview })
+  initContextPane({ onLayoutChange: dv.layoutDockview })
 
   configureTree({
     openFile: dv.openFile,
@@ -44,7 +46,7 @@ async function init () {
   renderTree(treeStore.get())
   refreshIcons()
 
-  initKeybindings({ save: dv.saveActiveFile, toggleSidebar })
+  initKeybindings({ save: dv.saveActiveFile, toggleSidebar, toggleContextPane })
 
   dv.restoreLayoutOrLastFile()
 
@@ -68,6 +70,7 @@ function buildMenuHandlers (dv) {
   return {
     'new-file': () => btnNewFile?.click(),
     'toggle-sidebar': toggleSidebar,
+    'toggle-context-pane': toggleContextPane,
     save: dv.saveActiveFile,
     'close-tab': dv.closeActivePanel,
     'toggle-history': () => {

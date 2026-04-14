@@ -62,7 +62,9 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Run electronegativity
-        run: npx --yes @doyensec/electronegativity -i . -o electronegativity.sarif -f sarif
+        # El formato se infiere de la extensión del fichero de salida
+        # (`.sarif` o `.csv`); electronegativity no tiene flag `-f`.
+        run: npx --yes @doyensec/electronegativity -i . -o electronegativity.sarif
       - name: Upload SARIF to code scanning
         if: always()
         uses: github/codeql-action/upload-sarif@v3
@@ -70,18 +72,18 @@ jobs:
           sarif_file: electronegativity.sarif
           category: electronegativity
 
-  gitleaks:
-    name: Gitleaks (secret scanning)
+  secret-scanning:
+    name: TruffleHog (secret scanning)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      # gitleaks-action es gratuita para repos públicos y organizaciones con
-      # menos de N usuarios. Si el repo pasa a privado y la acción exige
-      # licencia, alternativas gratis:
-      #   - Instalar el binario gitleaks vía curl y correrlo a mano.
-      #   - Reemplazar por trufflesecurity/trufflehog@main.
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # gitleaks-action@v2 exige licencia de pago para cuentas de
+      # organización (Entaina), así que usamos TruffleHog, que es gratis y
+      # cubre un catálogo de detectores equivalente. `--only-verified` filtra
+      # a secretos que TruffleHog ha podido comprobar activamente contra su
+      # servicio de origen (reduce casi todo el ruido de falsos positivos).
+      - uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --only-verified

@@ -27,8 +27,8 @@
     "electron": "^33.4.11",
     "electron-builder": "^25.1.8",
     "electron-updater": "^6.8.3",
-    "eslint": "^9",
-    "neostandard": "^0.12.2"
+    "eslint": "^10",
+    "neostandard": "^0.13.0"
   },
   "overrides": {
     "tar": "^7.5.13"

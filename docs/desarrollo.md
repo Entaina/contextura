@@ -6,9 +6,13 @@
 npm install                 # Instala dependencias (electron, electron-builder, chokidar, etc.)
 npm run desktop             # Arranca la app nativa Electron en modo desarrollo
 npm run dist                # Construye el DMG para macOS en dist/ (sin publicar)
+npm run lint                # Lint sobre todo el árbol (neostandard)
+npm run lint:fix            # Aplica las correcciones automáticas de neostandard
 ./scripts/build-icon.sh     # Regenera assets/icon.icns desde assets/source/Pi_01.png
 ./scripts/release.sh patch  # Release completa: bump de versión, build, publicación a GitHub
 ```
+
+El mismo linter corre automáticamente en CI junto con análisis estático de seguridad, auditoría de dependencias y escaneo de secretos — ver [ci.md](ci.md).
 
 El detalle de qué hace `release.sh` y cómo configurar el token está en [release.md](release.md).
 

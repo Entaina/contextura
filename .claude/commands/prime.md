@@ -32,6 +32,7 @@ QUERY: $ARGUMENTS — tema o dominio del que cargar contexto (opcional, en lengu
   - "release", "publish", "dmg", "auto-update" → `docs/release.md`
   - "design system", "estilos", "css", "tokens" → `docs/design-system.md`
   - "dev", "desarrollo", "npm run", "setup" → `docs/desarrollo.md`
+  - "ci", "pipeline", "github actions", "lint", "sast", "codeql", "dependabot", "secretos", "audit" → `docs/ci.md`
 - Si no hay coincidencia clara, informa al usuario y lista los dominios disponibles desde `docs/index.md`.
 - Si hay varias coincidencias razonables, presenta las opciones y pregunta cuál cargar antes de leer nada más.
 - **Siempre** al final: leer `docs/principios/index.md` y listar los principios aplicables agrupados por los dos niveles (producto y documentación). Los dos principios de documentación (`mece`, `independencia-conocimiento`) se listan **siempre**, porque cualquier edición de `docs/` los invoca. Los principios de producto se listan **selectivamente** según el dominio cargado (ver tabla en Ejemplos).
@@ -95,6 +96,7 @@ Los principios de **documentación** se listan siempre. Los principios de **prod
 | `producto` | macos-only |
 | `design-system` | (ninguno específico) |
 | `desarrollo` | vanilla-zero-build, electron-cjs, macos-only |
+| `ci` | vanilla-zero-build, macos-only |
 
 | Invocación | Comportamiento |
 |---|---|
@@ -105,4 +107,5 @@ Los principios de **documentación** se listan siempre. Los principios de **prod
 | `/prime frontend` | Carga `docs/frontend.md`. Producto: vanilla-zero-build. Documentación: mece, independencia |
 | `/prime backend` | Carga `docs/backend.md`. Producto: vanilla-zero-build. Documentación: mece, independencia |
 | `/prime producto` | Carga `docs/producto.md`. Producto: macos-only. Documentación: mece, independencia |
+| `/prime ci` | Carga `docs/ci.md`. Producto: vanilla-zero-build, macos-only. Documentación: mece, independencia |
 | `/prime algo-inexistente` | Informa y lista los dominios disponibles |

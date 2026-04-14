@@ -25,6 +25,7 @@ La fuente única de verdad sobre el producto, la arquitectura y la operación es
 | Proceso main de Electron, menú, config, ESM caveats | [docs/electron.md](docs/electron.md) |
 | Historial inline, diffs estilo Google Docs | [docs/historial.md](docs/historial.md) |
 | Integración con el Design System | [docs/design-system.md](docs/design-system.md) |
+| Pipeline de CI, SAST, auditoría de dependencias | [docs/ci.md](docs/ci.md) |
 | Publicar una release, auto-update | [docs/release.md](docs/release.md) |
 
 ## Reglas de trabajo

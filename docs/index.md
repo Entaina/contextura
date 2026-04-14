@@ -43,6 +43,10 @@ Para navegar empieza por la tabla de dominios más abajo y usa los criterios de 
 
 ### Operación
 
+- [ci.md](ci.md): Pipeline de GitHub Actions — linter, SAST (CodeQL + Electronegativity), `npm audit`, Dependabot, escaneo de secretos
+  - Leer al modificar cualquier workflow de `.github/workflows/` o `.github/dependabot.yml`
+  - Leer para entender qué valida el pipeline y dónde encontrar los resultados
+
 - [release.md](release.md): `release.sh`, token del Keychain, auto-update, verificación de una release publicada
   - Leer antes de cortar una release
   - Leer para entender el flujo de auto-update en clientes instalados

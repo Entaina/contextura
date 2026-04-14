@@ -41,7 +41,25 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
-      - run: npm test
+      - run: npm run test:ci
+
+  test-e2e:
+    name: Tests (e2e Electron)
+    runs-on: macos-latest
+    # Advisory during initial stabilization: allow the pipeline to go green
+    # even if the Electron e2e flakes. Promote to bloqueante once the suite
+    # has been observed stable across enough real runs.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run test:e2e
+        env:
+          ELECTRON_RUN_AS_NODE: ''
 
   audit:
     name: npm audit

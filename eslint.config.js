@@ -10,7 +10,9 @@ export default [
       'release/**',
       'build/**',
       '**/.history/**',
-      '.claude/**'
+      '.claude/**',
+      'test-results/**',
+      'playwright-report/**'
     ]
   },
   ...neostandard({

@@ -15,7 +15,11 @@ const ICON_WARN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 export class HistoryModule {
   /**
    * @param {Object} opts
-   * @param {(version: object) => void} opts.onVersionSelect
+   * @param {(version: object, ctx: {
+   *   versions: object[],
+   *   hasUncommittedChanges: boolean,
+   *   untracked: boolean,
+   * }) => void} opts.onVersionSelect
    */
   constructor ({ onVersionSelect }) {
     this.element = document.createElement('div')
@@ -32,6 +36,8 @@ export class HistoryModule {
     this._selectedKey = null
     /** @type {Map<string, {versions: object[], hasUncommittedChanges: boolean, untracked: boolean, notInGit: boolean}>} */
     this._cache = new Map()
+    /** Current path's loaded state, shared with click handlers for ctx. */
+    this._state = null
   }
 
   setPath (path) {
@@ -44,6 +50,7 @@ export class HistoryModule {
     if (!this._path) return
     const cached = this._cache.get(this._path)
     if (cached) {
+      this._state = cached
       this._renderTimeline(cached)
       return
     }
@@ -57,9 +64,18 @@ export class HistoryModule {
         notInGit: !!data.notInGit,
       }
       this._cache.set(this._path, state)
+      this._state = state
       this._renderTimeline(state)
     } catch {
       this._timeline.innerHTML = '<div class="context-history-empty">No se pudo cargar el historial.</div>'
+    }
+  }
+
+  _ctxForClick () {
+    return {
+      versions: this._state?.versions || [],
+      hasUncommittedChanges: !!this._state?.hasUncommittedChanges,
+      untracked: !!this._state?.untracked,
     }
   }
 
@@ -122,7 +138,7 @@ export class HistoryModule {
     item.addEventListener('click', () => {
       this._selectedKey = 'uncommitted'
       this._applySelection()
-      this._onVersionSelect({ status: 'U', untracked })
+      this._onVersionSelect({ status: 'U', untracked }, this._ctxForClick())
     })
     return item
   }
@@ -152,7 +168,7 @@ export class HistoryModule {
     item.addEventListener('click', () => {
       this._selectedKey = v.sha
       this._applySelection()
-      this._onVersionSelect(v)
+      this._onVersionSelect(v, this._ctxForClick())
     })
     return item
   }

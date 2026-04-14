@@ -15,7 +15,7 @@ let onVersionSelectRef = () => {}
 
 /**
  * @param {Object} deps
- * @param {(path: string, version: object) => void} deps.onVersionSelect
+ * @param {(path: string, version: object, ctx: object) => void} deps.onVersionSelect
  *   Called when the user clicks a commit in the history timeline. The
  *   host module (app.js) forwards this to the active editor panel.
  */
@@ -37,7 +37,7 @@ export function setActiveFile (path) {
 
   if (!historyModule) {
     historyModule = new HistoryModule({
-      onVersionSelect: (v) => onVersionSelectRef(currentPath, v),
+      onVersionSelect: (v, ctx) => onVersionSelectRef(currentPath, v, ctx),
     })
   }
 

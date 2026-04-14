@@ -15,7 +15,7 @@ Ambas librerías se cargan como módulos ES directamente desde `node_modules` si
 
 `app.js` define varios renderers que Dockview instancia bajo demanda:
 
-- **`EditorPanelRenderer`** — panel de contenido que contiene el editor, gestiona el estado de guardado/sucio y alberga el `HistoryView` inline cuando el usuario entra en modo historial. Ver [historial.md](historial.md).
+- **`EditorPanelRenderer`** — panel de contenido que contiene el editor, gestiona el estado de guardado/sucio y alberga el `DiffView` cuando el usuario selecciona una versión en el timeline del pane contextual derecho. Ver [historial.md](historial.md).
 - **`DirtyTabRenderer`** — pestaña con indicador de sucio y botón de cerrar. Intercepta el cierre para aplicar el flujo de confirmación cuando hay cambios sin guardar.
 - **`WelcomeWatermark`** — watermark mostrado cuando no hay ningún fichero abierto.
 

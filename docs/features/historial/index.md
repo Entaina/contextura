@@ -2,7 +2,7 @@
 
 ## Acerca de este índice
 
-El modo historial es la feature distintiva de Contextura: permite recorrer las versiones anteriores de un fichero, ver los cambios inline con el estilo visual de Google Docs, y restaurar cualquier versión con un clic. Vive embebido dentro del propio panel del editor, de modo que cada pestaña abierta gestiona su historial de forma independiente.
+El modo historial es la feature distintiva de Contextura: permite recorrer las versiones anteriores de un fichero, ver los cambios inline con el estilo visual de Google Docs, y restaurar cualquier versión con un clic. El timeline de versiones vive permanentemente en el pane contextual derecho, acoplado al fichero activo; al hacer click en una versión, el panel del editor correspondiente muestra los cambios de esa versión sin perder el estado de edición.
 
 Este módulo agrupa las features atómicas que construyen esa experiencia: la entrada/salida del modo, la línea de tiempo, el diff inline, la restauración, y las garantías de UX que el producto hace al usuario (anti-jerga, seguimiento de renames, detección de cambios sin commitear, banners contextuales).
 

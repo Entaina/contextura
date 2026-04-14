@@ -25,7 +25,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
    * Subscribe to menu-driven actions dispatched from the main process.
    * Returns an unsubscribe function.
    *
-   * Supported actions: 'new-file', 'toggle-sidebar', 'toggle-history', 'save'.
+   * Supported actions: 'new-file', 'toggle-sidebar', 'toggle-context-pane', 'save'.
    */
   onMenuAction: (callback) => {
     const listener = (_event, action) => callback(action)

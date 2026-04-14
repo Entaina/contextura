@@ -172,9 +172,9 @@ function buildMenu () {
           click: () => sendAction('toggle-sidebar'),
         },
         {
-          label: 'Toggle History',
-          accelerator: 'CmdOrCtrl+H',
-          click: () => sendAction('toggle-history'),
+          label: 'Toggle Context Pane',
+          accelerator: 'CmdOrCtrl+Alt+B',
+          click: () => sendAction('toggle-context-pane'),
         },
         { type: 'separator' },
         { role: 'reload' },

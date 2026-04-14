@@ -39,10 +39,10 @@ async function init () {
   })
 
   initContextHost({
-    onVersionSelect: (path, version) => {
+    onVersionSelect: (path, version, ctx) => {
       const active = dv.dockview?.activePanel
       if (!active || active.id !== path) return
-      panelStore.get(active.id)?.renderer?.showHistoryVersion(version)
+      panelStore.get(active.id)?.renderer?.showDiffVersion(version, ctx)
     },
   })
 
@@ -73,7 +73,6 @@ async function onServerFileChange (data) {
   for (const s of panelStore.values()) {
     if (!data.path.endsWith(s.path) || s.isDirty) continue
     if (!s.renderer.consumeJustSaved()) s.renderer.loadContent()
-    s.renderer.invalidateHistory()
     invalidateHistory(s.path)
   }
 }
@@ -85,11 +84,6 @@ function buildMenuHandlers (dv) {
     'toggle-context-pane': toggleContextPane,
     save: dv.saveActiveFile,
     'close-tab': dv.closeActivePanel,
-    'toggle-history': () => {
-      const active = dv.dockview?.activePanel
-      if (!active) return
-      panelStore.get(active.id)?.renderer?.toggleHistory()
-    },
   }
 }
 

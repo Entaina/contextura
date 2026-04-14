@@ -30,6 +30,18 @@ Los hallazgos de ambas se publican como SARIF en la pestaña **Security → Code
 
 **TruffleHog** escanea el historial del repo en cada push y pull request buscando secretos (tokens, claves API, credenciales). Corre con `--only-verified`, que valida activamente cada hallazgo contra el servicio origen antes de emitirlo, filtrando casi todo el ruido de falsos positivos.
 
+### 5. Tests
+
+Los tests se distribuyen en tres niveles usando `node:test` (built-in) para los dos primeros y `@playwright/test` con `_electron` para el e2e. No hay paso de build — las herramientas respetan el principio [vanilla / zero-build](principios/producto/vanilla-zero-build.md). Las fuentes viven en `test/`: `unit/`, `integration/`, `e2e/`, más fixtures y helpers compartidos.
+
+Dos jobs:
+
+- **`test-backend`** — `runs-on: ubuntu-latest`. Ejecuta `npm run test:ci` (unit + integración). Bloqueante desde el primer día: son tests POSIX-puros, deterministas, y no tienen excusas para flakear. Cubre `lib/scanner.mjs`, `lib/git-history.mjs`, `electron/config.cjs`, toda la superficie HTTP de `server.mjs` (tree, file CRUD, path traversal, history endpoints) y el `/sse` con chokidar real contra un vault temporal.
+
+- **`test-e2e`** — `runs-on: macos-latest`. Ejecuta `npm run test:e2e` sobre la app Electron real (Playwright `_electron.launch`), contra un `userData` aislado con `--user-data-dir` y un `config.json` pre-seedeado que apunta a un vault fixture para saltarse el folder picker. Solo macOS porque el producto es [macos-only](principios/producto/macos-only.md) y porque Electron e2e en Linux requiere `xvfb` y degrada la fidelidad. Se lanza en modo **advisory** (`continue-on-error: true`) durante la fase inicial para observar flakiness real antes de promoverlo a bloqueante.
+
+Los comandos para correrlos en local están en [desarrollo.md](desarrollo.md).
+
 ## Cuándo se ejecuta
 
 - Cada push a `main`.

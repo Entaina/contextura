@@ -24,10 +24,13 @@
   },
   "devDependencies": {
     "@doyensec/electronegativity": "^1.10.3",
-    "electron": "^33",
-    "electron-builder": "^25",
-    "electron-updater": "^6",
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
+    "electron-updater": "^6.8.3",
     "eslint": "^9",
     "neostandard": "^0.12.2"
+  },
+  "overrides": {
+    "tar": "^7.5.13"
   }
 }

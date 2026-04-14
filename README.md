@@ -22,21 +22,43 @@ Es un único fichero **universal** que funciona tanto en Apple Silicon (M1/M2/M3
 1. Abre el `.dmg` que descargaste
 2. Arrastra **Contextura** a tu carpeta **Applications**
 3. Cierra el DMG y ve a Applications
-4. **Click derecho sobre Contextura → Abrir** (es importante el click derecho, no doble click)
+4. **Click derecho sobre Contextura → Abrir** (importante: click derecho, no doble click)
 5. macOS te avisará "no se puede abrir porque es de un desarrollador no identificado". Pulsa **Abrir** en el diálogo
 6. Listo. La próxima vez puedes abrirla con doble click normal
 
-> **Importante**: el paso del click derecho hay que hacerlo **una vez por cada versión nueva** que se instale. Es decir, cuando la app se auto-actualice y la reabras, puede que vuelva a pedirte el mismo click derecho. Es molesto pero solo es un click extra cada vez.
+> **Importante**: el paso 4 (click derecho → Abrir) hay que hacerlo **una vez por cada versión nueva** que se instale. Cuando la app se auto-actualice y la reabras, puede volver a pedírtelo. Es molesto pero solo es un click extra cada vez.
 
-### ¿Por qué hay que hacer click derecho?
+### Cómo se hace click derecho en Mac
 
-Contextura se distribuye sin firmar con un Apple Developer ID (~99€/año), porque por ahora es una herramienta interna. macOS Gatekeeper no reconoce la firma como "verificada por Apple" y por defecto bloquea el primer arranque. El click derecho → Abrir es la forma estándar de decirle a macOS "sí, confío en esta app".
+Tres formas, usa la que te funcione:
+
+- **Trackpad (MacBook)**: tap con **dos dedos** a la vez sobre el icono
+- **Magic Mouse**: toca en la mitad derecha del ratón (tiene que estar activado en Ajustes del Sistema → Ratón → "Click secundario")
+- **La universal, siempre funciona**: mantén pulsada la tecla **`Control`** y haz **click normal**. Esto es equivalente a click derecho en cualquier Mac con cualquier ratón/trackpad. Si dudas, usa esta
+
+### Si en el diálogo solo hay "Move to Trash" y "Done" (no aparece "Abrir")
+
+En macOS Sequoia (versión 15+) Apple quitó el botón "Abrir" de ese diálogo para apps sin firmar. Entonces hay que ir por **Ajustes del Sistema**:
+
+1. En el diálogo actual pulsa **Done** (NO "Move to Trash", eso borraría la app)
+2. Abre **Ajustes del Sistema** (System Settings) desde el menú  Apple
+3. Ve a **Privacidad y Seguridad** (Privacy & Security)
+4. **Baja hasta el final** de la página. Verás un aviso tipo: *"Contextura fue bloqueado porque no es de un desarrollador identificado"*
+5. Pulsa el botón **"Abrir de todas formas"** (Open Anyway) junto a ese aviso
+6. macOS te pedirá tu contraseña del Mac o Touch ID para confirmar
+7. Vuelve a Applications, doble click en Contextura y ya se abre normal
+
+Esta es la vía "oficial" de Apple para apps no notarizadas. Funciona en cualquier macOS reciente y es la opción a prueba de fallos si el click derecho no te saca el botón "Abrir".
+
+### ¿Por qué toda esta ceremonia?
+
+Contextura se distribuye sin firmar con un Apple Developer ID (~99€/año), porque por ahora es una herramienta interna. macOS Gatekeeper no reconoce la firma como "verificada por Apple" y por defecto bloquea el primer arranque. Tanto el click derecho → Abrir como la vía de Ajustes del Sistema son formas estándar de decirle a macOS "sí, confío en esta app".
 
 No es un bug ni un riesgo de seguridad: es el mismo proceso que sigues con cualquier herramienta open source distribuida fuera del Mac App Store. Si te resulta molesto, dilo y valoraremos pagar la firma para eliminar la fricción del todo.
 
 ### Si te dice "está dañado y no se puede abrir" en lugar del aviso normal
 
-Eso significa que descargaste una versión muy antigua (anterior a la 0.1.1) que no estaba firmada en absoluto. **Borra esa app y descarga la última desde [Releases](https://github.com/Entaina/contextura/releases/latest)**. La 0.1.1 y posteriores funcionan con click derecho → Abrir.
+Eso significa que descargaste una versión muy antigua (anterior a la 0.1.1) que no estaba firmada en absoluto. **Borra esa app y descarga la última desde [Releases](https://github.com/Entaina/contextura/releases/latest)**. La 0.1.1 y posteriores funcionan con los pasos de arriba.
 
 ## Primer uso
 

@@ -10,10 +10,11 @@
     "dist": "electron-builder",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "npm run test:unit && npm run test:integration",
+    "test": "npm run test:unit && npm run test:integration && npm run test:e2e",
     "test:unit": "node --test 'test/unit/**/*.test.?(c|m)js'",
     "test:integration": "node --test 'test/integration/**/*.test.?(c|m)js'",
-    "test:ci": "npm run test"
+    "test:e2e": "playwright test",
+    "test:ci": "npm run test:unit && npm run test:integration"
   },
   "engines": {
     "node": ">=20"
@@ -31,6 +32,7 @@
   },
   "devDependencies": {
     "@doyensec/electronegativity": "^1.10.3",
+    "@playwright/test": "^1.59.1",
     "electron": "^41.2.0",
     "electron-builder": "^26.8.1",
     "electron-updater": "^6.8.3",

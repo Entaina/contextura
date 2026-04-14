@@ -38,6 +38,7 @@
     "electron-updater": "^6.8.3",
     "eslint": "^9",
     "globals": "^15.15.0",
+    "lefthook": "^2.1.5",
     "neostandard": "^0.12.2"
   },
   "overrides": {

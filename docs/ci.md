@@ -10,7 +10,7 @@ Este fichero describe **qué** se valida y **por qué**. El detalle de herramien
 
 Todo el código JavaScript pasa por **neostandard** — una configuración de ESLint equivalente a `standard` (sin punto y coma, comillas simples, `promise/param-names`, etc.). Se aplican overrides por carpeta para respetar la dualidad del proyecto: CommonJS en [electron/](../electron/), ESM + Node en [server.mjs](../server.mjs) y [lib/](../lib/), ESM + browser en [public/](../public/).
 
-El linter también se ejecuta localmente — ver los comandos en [desarrollo.md](desarrollo.md).
+El linter también se ejecuta localmente — ver los comandos en [desarrollo.md](desarrollo.md) — y se dispara automáticamente antes de cada commit local vía el pre-commit hook documentado allí mismo.
 
 ### 2. SAST (análisis estático de seguridad)
 

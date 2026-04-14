@@ -19,6 +19,10 @@ npm run test:ci             # Unit + integración (sin e2e) — el mismo comando
 
 El mismo linter y los tests corren automáticamente en CI junto con análisis estático de seguridad, auditoría de dependencias y escaneo de secretos — ver [ci.md](ci.md).
 
+## Pre-commit hook
+
+`npm install` cablea un hook `pre-commit` vía [lefthook](https://lefthook.dev): al hacer `git commit`, lefthook corre `eslint` sobre los ficheros JS/MJS/CJS staged y aborta el commit si hay errores. La configuración vive en [lefthook.yml](../lefthook.yml). Si el hook bloquea, corre `npm run lint:fix` y reintenta; para saltarlo de forma puntual, `git commit --no-verify`.
+
 El detalle de qué hace `release.sh` y cómo configurar el token está en [release.md](release.md).
 
 ## Punto de entrada

@@ -69,6 +69,7 @@ function buildMenuHandlers (dv) {
     'new-file': () => btnNewFile?.click(),
     'toggle-sidebar': toggleSidebar,
     save: dv.saveActiveFile,
+    'close-tab': dv.closeActivePanel,
     'toggle-history': () => {
       const active = dv.dockview?.activePanel
       if (!active) return

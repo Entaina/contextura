@@ -13,6 +13,8 @@ Los atajos disponibles son los canónicos del sistema, asociados a las acciones 
 | Abrir carpeta | ⌘O |
 | Nuevo fichero | ⌘N |
 | Guardar | ⌘S |
+| Cerrar pestaña | ⌘W |
+| Cerrar ventana | ⇧⌘W |
 | Alternar barra lateral | ⌘B |
 | Alternar modo historial | ⌘H |
 

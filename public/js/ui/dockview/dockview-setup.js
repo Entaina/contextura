@@ -12,7 +12,7 @@ import { panelStore } from '../../state/panel-store.js'
 import { selectionStore } from '../../state/selection-store.js'
 import { basename } from '../../domain/path.js'
 import { EditorPanelRenderer } from './editor-panel.js'
-import { DirtyTabRenderer } from './dirty-tab.js'
+import { DirtyTabRenderer, closePanelWithConfirm } from './dirty-tab.js'
 import { WelcomeWatermark } from './welcome.js'
 import { createLayoutStore } from './layout-store.js'
 import { markActive, revealPath, clearActive, DRAG_MIME } from '../tree.js'
@@ -32,6 +32,7 @@ function buildEditorPanelOpts (path) {
  *   dockview: import('https://esm.sh/dockview-core@5').DockviewComponent,
  *   openFile: (path: string, event?: MouseEvent) => Promise<void>,
  *   saveActiveFile: () => void,
+ *   closeActivePanel: () => void,
  *   layoutDockview: () => void,
  *   restoreLayoutOrLastFile: () => void,
  * }}
@@ -126,6 +127,12 @@ export function initDockview () {
     if (s?.renderer) s.renderer.save()
   }
 
+  function closeActivePanel () {
+    const active = dockview.activePanel
+    if (!active) return
+    closePanelWithConfirm(active.api)
+  }
+
   function restoreLayoutOrLastFile () {
     if (layoutStore.restore()) return
     const last = storage.lastFile.get()
@@ -134,5 +141,5 @@ export function initDockview () {
 
   layoutDockview()
 
-  return { dockview, openFile, saveActiveFile, layoutDockview, restoreLayoutOrLastFile }
+  return { dockview, openFile, saveActiveFile, closeActivePanel, layoutDockview, restoreLayoutOrLastFile }
 }

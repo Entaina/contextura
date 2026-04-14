@@ -137,7 +137,13 @@ function buildMenu () {
           click: () => sendAction('save'),
         },
         { type: 'separator' },
-        isMac ? { role: 'close' } : { role: 'quit' },
+        isMac
+          ? {
+              label: 'Close Tab',
+              accelerator: 'CmdOrCtrl+W',
+              click: () => sendAction('close-tab'),
+            }
+          : { role: 'quit' },
       ],
     },
     {
@@ -185,6 +191,12 @@ function buildMenu () {
           ? [
               { type: 'separator' },
               { role: 'front' },
+              { type: 'separator' },
+              {
+                label: 'Close Window',
+                accelerator: 'Shift+CmdOrCtrl+W',
+                role: 'close',
+              },
             ]
           : [
               { role: 'close' },

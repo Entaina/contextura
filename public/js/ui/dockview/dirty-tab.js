@@ -13,6 +13,12 @@ import { basename } from '../../domain/path.js'
 
 const UNSAVED_CONFIRM = 'Hay cambios sin guardar. \u00BFCerrar sin guardar?'
 
+export function closePanelWithConfirm (panelApi) {
+  const s = panelStore.get(panelApi.id)
+  if (s?.isDirty && !confirm(UNSAVED_CONFIRM)) return
+  panelApi.close()
+}
+
 export class DirtyTabRenderer {
   constructor () {
     this.element = document.createElement('div')
@@ -48,9 +54,7 @@ export class DirtyTabRenderer {
     this._close.addEventListener('click', (e) => {
       e.preventDefault()
       e.stopPropagation()
-      const s = panelStore.get(this._api.id)
-      if (s?.isDirty && !confirm(UNSAVED_CONFIRM)) return
-      this._api.close()
+      closePanelWithConfirm(this._api)
     })
   }
 

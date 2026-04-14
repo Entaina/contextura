@@ -2,6 +2,8 @@
 
 El backend es un servidor HTTP Node.js puro (sin Express) que vive en [server.mjs](../server.mjs), complementado por dos módulos de soporte en [lib/](../lib/). Se arranca en proceso desde Electron — ver [electron.md](electron.md) para el flujo de arranque.
 
+Este documento describe la implementación. Las features de cara al usuario que este backend habilita — el árbol de ficheros de la barra lateral y la recarga automática cuando cambian ficheros en disco — están en [features/navegacion/arbol-ficheros.md](features/navegacion/arbol-ficheros.md) y [features/live-reload.md](features/live-reload.md).
+
 ## `server.mjs`
 
 - Servidor HTTP Node.js puro, exporta `startServer({ rootPath, port, host })`.
@@ -31,14 +33,14 @@ Cualquier operación de fichero que recibe un path del cliente pasa por `safePat
 
 ## File Scanner — `lib/scanner.mjs`
 
-- Construye el árbol recursivo de ficheros `.md` servido por `/api/tree`.
+- Construye el árbol recursivo de ficheros `.md` servido por `/api/tree`. El contrato que esta estructura hace al usuario está en [features/navegacion/arbol-ficheros.md](features/navegacion/arbol-ficheros.md).
 - Respeta las exclusiones declaradas en un `.indexignore` del `rootPath`. Si el fichero no existe, cae a una lista hardcodeada: `.git`, `.claude`, `.obsidian`, `node_modules`, `tools`, `Archive`.
 - Genera el índice de filenames que `/api/index` expone para que el frontend pueda resolver wikilinks tipo `[[nombre]]` sin conocer rutas absolutas.
 
 ## File Watcher — `lib/watcher.mjs`
 
 - Usa chokidar para observar los cambios en ficheros `.md` dentro del `rootPath`.
-- Emite los cambios vía SSE al endpoint `/sse` para disparar el live reload en el cliente.
+- Emite los cambios vía SSE al endpoint `/sse` para disparar la recarga automática en el cliente. Las garantías que esta recarga hace al usuario viven en [features/live-reload.md](features/live-reload.md).
 - Expone `closeAllConnections()`, que el puente Electron invoca para cerrar limpiamente todas las conexiones SSE cuando el usuario cambia de carpeta (`stop()` en la sección de `server.mjs`).
 
 Una nota de implementación: `watcher.mjs` carga chokidar vía `createRequire` en vez de con un `import` ESM. No es cosmético — es parte de la estrategia para esquivar los ESM caveats de Electron 33. Ver [principios/producto/electron-cjs.md](principios/producto/electron-cjs.md) y [electron.md](electron.md).

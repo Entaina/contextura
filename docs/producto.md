@@ -10,16 +10,11 @@ La propuesta es funcionar como un VS Code minimalista específico para markdown,
 
 Organizaciones que ya tienen (o quieren tener) su conocimiento en markdown versionado con git y necesitan una capa de edición usable por todo el equipo, no solo por desarrolladores.
 
-## Features principales
+## Features
 
-- Árbol de ficheros tipo VS Code en la sidebar
-- Edición con pestañas y splits
-- Edición WYSIWYG de markdown
-- Historial git inline con diffs estilo Google Docs y restauración de versiones
-- Live reload cuando los ficheros cambian en disco
-- Selector nativo de carpeta — funciona sobre cualquier carpeta, no está atado a un repo concreto
+El catálogo completo de features del producto, descritas desde el punto de vista del usuario con sus flujos e invariantes, vive en [features/index.md](features/index.md) agrupado por módulos. Este documento deliberadamente no duplica esa lista para que añadir o retirar features no obligue a actualizar dos sitios.
 
-Los detalles técnicos de cómo se implementan estas features (qué librerías y patrones) viven en los ficheros de arquitectura del índice [index.md](index.md), no aquí.
+Los detalles técnicos de cómo se implementan esas features (qué librerías, qué ficheros, qué patrones) viven en los documentos de arquitectura del índice [index.md](index.md).
 
 ## Plataformas soportadas
 

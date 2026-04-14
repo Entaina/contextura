@@ -2,6 +2,8 @@
 
 El directorio [electron/](../electron/) envuelve el backend como aplicación nativa de macOS. Todos los ficheros del proceso main son CommonJS por una razón técnica concreta — ver [principios/producto/electron-cjs.md](principios/producto/electron-cjs.md).
 
+Este documento describe la implementación. Las features de integración nativa — menú, atajos, ventana, configuración persistente, auto-update y la elección de la carpeta raíz — viven desde el punto de vista del usuario en [features/plataforma/](features/plataforma/index.md) y [features/carpeta-raiz/](features/carpeta-raiz/index.md).
+
 ## Flujo de arranque
 
 `npm run desktop` lanza `electron/main.cjs`, que:
@@ -22,7 +24,7 @@ El `rootPath` es elegido por el usuario y puede cambiar en cualquier momento des
   - `getVersion` — versión del bundle de la app.
   - `onMenuAction` — suscribe el renderer a eventos del menú nativo.
 - **`electron/config.cjs`** — Persiste `{ rootPath, windowBounds }` en `app.getPath('userData')/config.json`.
-- **`electron/updater.cjs`** — Wrapper sobre `electron-updater`. No-op cuando `!app.isPackaged`. El flujo de auto-update completo (cuándo consulta, qué compara, cuándo aplica) está en [release.md](release.md).
+- **`electron/updater.cjs`** — Wrapper sobre `electron-updater`. No-op cuando `!app.isPackaged`. El flujo que experimenta el usuario está descrito en [features/plataforma/auto-update.md](features/plataforma/auto-update.md); el flujo de publicación y el detalle operativo de la actualización están en [release.md](release.md).
 - **`electron-builder.yml`** — Config del builder. Produce un DMG sin firmar (arm64 + x64) en `dist/`. `publish: github` apuntando a `Entaina/contextura`.
 - **`assets/icon.icns`** — Icono de la app. Generado por `scripts/build-icon.sh` desde `assets/source/Pi_01.png` (mascota de marca Entaina) con padding gris Marengo (#6c6e72).
 - **`assets/source/Pi_01.png`** — Imagen fuente del icono. Asset de marca Entaina copiado aquí para que el repo sea autocontenido.
@@ -36,7 +38,7 @@ Los clicks del menú nativo disparan `ipcRenderer.send('menu:action', <action>)`
 - `toggle-sidebar` → `toggleSidebar()`.
 - `toggle-history` → alterna `_enterHistoryMode` / `_exitHistoryMode` en el `EditorPanelRenderer` activo. Ver [historial.md](historial.md).
 
-`Open Folder…` se gestiona directamente en `main.cjs` sin delegar al renderer: diálogo → guardar config → `swapServer` → `win.loadURL`.
+`Open Folder…` se gestiona directamente en `main.cjs` sin delegar al renderer: diálogo → guardar config → `swapServer` → `win.loadURL`. El flujo resultante que experimenta el usuario está en [features/carpeta-raiz/swap-carpeta.md](features/carpeta-raiz/swap-carpeta.md).
 
 ## Ubicación de la configuración
 
@@ -51,7 +53,7 @@ Los clicks del menú nativo disparan `ipcRenderer.send('menu:action', <action>)`
 }
 ```
 
-Borra el fichero para resetear la app a un estado limpio (el siguiente arranque mostrará el folder picker).
+Borra el fichero para resetear la app a un estado limpio (el siguiente arranque mostrará el folder picker). El lado de usuario de esta persistencia está en [features/plataforma/config-persistente.md](features/plataforma/config-persistente.md) y [features/plataforma/window-bounds.md](features/plataforma/window-bounds.md).
 
 > **Nota**: puede haber un directorio obsoleto `~/Library/Application Support/Context Viewer/` de antes del rename. Se puede borrar sin riesgo.
 

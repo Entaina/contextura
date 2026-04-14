@@ -33,6 +33,11 @@ Los principios de documentación viven dentro de `docs/` por pragmatismo — son
   - Leer cuando se detecte información duplicada entre ficheros
   - Leer cuando se decida cómo estructurar contenido relacionado entre múltiples ficheros
 
+- [documentacion/features.md](documentacion/features.md): Principio de la capa de features — `docs/features/**` es dueña del QUÉ/UX y `docs/<arquitectura>.md` del CÓMO/técnico
+  - Leer cuando se cree o modifique cualquier fichero en `docs/features/**`
+  - Leer cuando se detecte contenido de UX en un doc de arquitectura (o viceversa)
+  - Leer al añadir una feature nueva al producto
+
 - [documentacion/independencia-conocimiento.md](documentacion/independencia-conocimiento.md): Principio de Independencia — `docs/` describe el producto, no las herramientas que lo consumen
   - Leer cuando se añada contenido que mencione Claude Code, comandos, skills o cualquier otra herramienta
   - Leer cuando se decida si algo pertenece a `docs/` o a `.claude/`

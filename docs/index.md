@@ -12,9 +12,13 @@ Para navegar empieza por la tabla de dominios más abajo y usa los criterios de 
 
 ### Producto
 
-- [producto.md](producto.md): Qué es Contextura, para quién, features, plataformas soportadas, alcance futuro
+- [producto.md](producto.md): Qué es Contextura, para quién, plataformas soportadas, alcance futuro
   - Leer para entender el propósito y los límites del producto
   - Leer antes de tomar decisiones de scope
+
+- [features/index.md](features/index.md): Catálogo de features del producto agrupadas por módulos, descritas desde el punto de vista del usuario
+  - Leer para saber qué hace la app desde el punto de vista del usuario
+  - Leer antes de añadir una feature nueva (para elegir el módulo correcto)
 
 ### Desarrollo
 
@@ -28,15 +32,15 @@ Para navegar empieza por la tabla de dominios más abajo y usa los criterios de 
   - Leer al tocar cualquier endpoint `/api/*` o el flujo SSE
   - Leer al cambiar cómo se listan ficheros o cómo se detectan cambios en disco
 
-- [frontend.md](frontend.md): [public/app.js](../public/app.js), Dockview, Toast UI, renderers, dirty tracking, persistencia en localStorage
-  - Leer al tocar la UI, los paneles, la edición o el estado del layout
+- [frontend.md](frontend.md): [public/app.js](../public/app.js), Dockview, Toast UI, renderers, detección de cambios sin guardar, persistencia en localStorage
+  - Leer al tocar la implementación de la UI, los paneles, la edición o la persistencia del layout (la experiencia del usuario vive en [features/](features/index.md))
 
 - [electron.md](electron.md): Proceso main ([electron/](../electron/)), menú nativo, puente preload, ESM caveats, ubicación de configuración
   - Leer al crear o editar ficheros en `electron/`
   - Leer al investigar problemas de arranque o integración macOS
 
-- [historial.md](historial.md): Historial git inline — [lib/git-history.mjs](../lib/git-history.mjs) y el `HistoryView` del frontend
-  - Leer al tocar diffs, timeline, restauración de versiones o el modo historial del editor
+- [historial.md](historial.md): Implementación técnica del historial — [lib/git-history.mjs](../lib/git-history.mjs) y el `HistoryView` del frontend
+  - Leer al tocar la implementación del historial (la experiencia del usuario vive en [features/historial/](features/historial/index.md))
 
 - [design-system.md](design-system.md): Integración con el Entaina Design System vía CDN
   - Leer al tocar estilos globales, variables CSS o la sidebar
@@ -64,4 +68,5 @@ Reglas transversales que rigen todo lo anterior, divididas en dos niveles. Ver [
 **Nivel de documentación** (al editar cualquier fichero de `docs/`):
 
 - [principios/documentacion/mece.md](principios/documentacion/mece.md) — Exclusividad de dominio
+- [principios/documentacion/features.md](principios/documentacion/features.md) — Capa de features vs capa de arquitectura
 - [principios/documentacion/independencia-conocimiento.md](principios/documentacion/independencia-conocimiento.md) — `docs/` es independiente de las herramientas

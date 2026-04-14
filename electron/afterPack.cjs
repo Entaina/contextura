@@ -18,11 +18,11 @@
  *   gets deleted and `mac.identity` switches to the real cert name.
  */
 
-const { execFileSync } = require('node:child_process');
-const { join } = require('node:path');
+const { execFileSync } = require('node:child_process')
+const { join } = require('node:path')
 
-exports.default = async function afterPack(context) {
-  if (context.electronPlatformName !== 'darwin') return;
+exports.default = async function afterPack (context) {
+  if (context.electronPlatformName !== 'darwin') return
 
   // Universal builds invoke afterPack three times: once per arch into
   // mac-universal-{x64,arm64}-temp/, then once for the merged binary
@@ -30,14 +30,14 @@ exports.default = async function afterPack(context) {
   // temps independently produces divergent _CodeSignature files which
   // make @electron/universal refuse to merge them.
   if (context.appOutDir.includes('-temp')) {
-    console.log(`  • skipping ad-hoc sign for intermediate build  ${context.appOutDir}`);
-    return;
+    console.log(`  • skipping ad-hoc sign for intermediate build  ${context.appOutDir}`)
+    return
   }
 
-  const appName = `${context.packager.appInfo.productFilename}.app`;
-  const appPath = join(context.appOutDir, appName);
+  const appName = `${context.packager.appInfo.productFilename}.app`
+  const appPath = join(context.appOutDir, appName)
 
-  console.log(`  • ad-hoc signing  app=${appPath}`);
+  console.log(`  • ad-hoc signing  app=${appPath}`)
 
   try {
     // No --options runtime: hardened runtime is only needed for notarization
@@ -50,13 +50,13 @@ exports.default = async function afterPack(context) {
       '--sign', '-',
       '--timestamp=none',
       appPath,
-    ], { stdio: 'inherit' });
+    ], { stdio: 'inherit' })
 
     // Verify the signature was applied
-    execFileSync('codesign', ['--verify', '--verbose', appPath], { stdio: 'inherit' });
-    console.log(`  • ad-hoc signing complete`);
+    execFileSync('codesign', ['--verify', '--verbose', appPath], { stdio: 'inherit' })
+    console.log('  • ad-hoc signing complete')
   } catch (err) {
-    console.error(`  ✗ ad-hoc signing failed: ${err.message}`);
-    throw err;
+    console.error(`  ✗ ad-hoc signing failed: ${err.message}`)
+    throw err
   }
-};
+}

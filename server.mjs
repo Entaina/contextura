@@ -245,10 +245,10 @@ export function startServer ({ rootPath, port = 4986, host = '127.0.0.1' } = {})
 
   const watcher = createWatcher(ROOT_PATH, invalidateCache)
 
-  return new Promise((resolveStart, rejectStart) => {
-    server.once('error', rejectStart)
+  return new Promise((resolve, reject) => {
+    server.once('error', reject)
     server.listen(port, host, () => {
-      server.removeListener('error', rejectStart)
+      server.removeListener('error', reject)
       const actualPort = server.address().port
       const url = `http://${host}:${actualPort}`
       console.log(`Contextura running at ${url} (root: ${ROOT_PATH})`)
@@ -256,10 +256,10 @@ export function startServer ({ rootPath, port = 4986, host = '127.0.0.1' } = {})
       async function stop () {
         closeAllConnections()
         await watcher.close()
-        await new Promise(r => server.close(() => r()))
+        await new Promise(resolve => server.close(() => resolve()))
       }
 
-      resolveStart({ port: actualPort, url, rootPath: ROOT_PATH, stop })
+      resolve({ port: actualPort, url, rootPath: ROOT_PATH, stop })
     })
   })
 }

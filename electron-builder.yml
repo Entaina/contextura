@@ -1,0 +1,56 @@
+appId: ai.entaina.contextura
+productName: Contextura
+copyright: Copyright © 2026 Entaina
+
+directories:
+  output: dist
+  buildResources: assets
+
+files:
+  - "server.mjs"
+  - "lib/**"
+  - "public/**"
+  - "electron/**"
+  - "package.json"
+  - "!**/*.map"
+  - "!**/.DS_Store"
+
+asar: true
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - universal
+  category: public.app-category.productivity
+  icon: assets/icon.icns
+  darkModeSupport: true
+  # Skip electron-builder's signing pipeline (it doesn't understand the
+  # codesign convention `-` for ad-hoc). We apply ad-hoc signing manually
+  # via electron/afterPack.cjs so the binary isn't rejected as "damaged"
+  # on macOS Sonoma+. Upgrade path: switch identity to a real Developer ID
+  # and remove the afterPack hook to use electron-builder's native signing.
+  identity: null
+  gatekeeperAssess: false
+  # Drop the arch suffix from the filename; universal binary is the only arch.
+  artifactName: "${productName}-${version}.${ext}"
+
+# Hook that runs after the .app is packaged but before the DMG is built.
+# Applies an ad-hoc codesign so Gatekeeper doesn't flag the app as damaged.
+afterPack: electron/afterPack.cjs
+
+dmg:
+  title: "${productName} ${version}"
+  window:
+    width: 540
+    height: 380
+
+# Auto-update channel (GitHub Releases). Binaries publish to Entaina/contextura,
+# a dedicated public release repo separate from where the source code lives.
+# This decoupling means the release URL is stable even if we later extract the
+# source out of the PARA monorepo into its own repo. See CLAUDE.md § Release process.
+publish:
+  provider: github
+  owner: Entaina
+  repo: contextura
+  releaseType: release

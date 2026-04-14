@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="technology">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contextura — Entaina</title>
+
+  <!-- Entaina Design System tokens -->
+  <link rel="stylesheet" href="https://design-system.entaina.ai/tokens/css/variables.css" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Lato:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS + Entaina Design System config -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://design-system.entaina.ai/tokens/tailwind/tailwind.config.js"></script>
+
+  <!-- Lucide icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- Toast UI Editor — WYSIWYG markdown -->
+  <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
+  <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+
+  <!-- Dockview — layout manager (tabs) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dockview-core@5/dist/styles/dockview.css" />
+
+  <!-- Markdown-it — render markdown a HTML (para visor de cambios estilo Google Docs) -->
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.1/dist/markdown-it.min.js"></script>
+  <!-- htmldiff-js se carga dinámicamente desde app.js (necesita dynamic import, no UMD) -->
+
+  <link rel="stylesheet" href="/public/style.css" />
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-logo">Entaina PARA</span>
+      <div class="sidebar-header-actions">
+        <button id="btn-new-file"   title="Nuevo archivo (en contexto actual)" class="icon-btn"><i data-lucide="file-plus"></i></button>
+        <button id="btn-new-folder" title="Nueva carpeta (en contexto actual)" class="icon-btn"><i data-lucide="folder-plus"></i></button>
+        <button id="btn-collapse-all" title="Colapsar todo" class="icon-btn"><i data-lucide="list-collapse"></i></button>
+        <button id="btn-toggle-sidebar" title="Ocultar sidebar (⌘B)" class="icon-btn"><i data-lucide="panel-left-close"></i></button>
+      </div>
+    </div>
+    <div class="sidebar-search">
+      <input type="text" id="search-input" placeholder="Buscar..." autocomplete="off" />
+    </div>
+    <nav id="file-tree">
+      <div class="tree-loading">Cargando árbol…</div>
+    </nav>
+  </aside>
+
+  <!-- Resize handle -->
+  <div id="resize-handle" class="resize-handle"></div>
+
+  <!-- Main viewer area (dockview tabs) -->
+  <main id="main" class="dockview-theme-entaina">
+    <div id="dockview-container"></div>
+  </main>
+
+  <!-- Show sidebar button (visible when sidebar hidden) -->
+  <button id="sidebar-show-btn" class="sidebar-show-btn" title="Mostrar sidebar (⌘B)">
+    <i data-lucide="panel-left-open"></i>
+  </button>
+
+  <script src="/public/app.js" type="module"></script>
+</body>
+</html>

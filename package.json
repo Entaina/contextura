@@ -1,0 +1,28 @@
+{
+  "name": "contextura",
+  "version": "0.1.1",
+  "description": "Editor nativo para gestionar contextos organizacionales en markdown. Historial, diffs inline estilo Google Docs y live reload.",
+  "author": "Entaina",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "desktop": "electron .",
+    "dist": "electron-builder"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Entaina/contextura.git"
+  },
+  "homepage": "https://github.com/Entaina/contextura",
+  "bugs": {
+    "url": "https://github.com/Entaina/contextura/issues"
+  },
+  "dependencies": {
+    "chokidar": "^3"
+  },
+  "devDependencies": {
+    "electron": "^33",
+    "electron-builder": "^25",
+    "electron-updater": "^6"
+  }
+}

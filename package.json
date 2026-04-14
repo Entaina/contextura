@@ -11,13 +11,13 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "npm run test:unit && npm run test:integration && npm run test:e2e",
-    "test:unit": "node --test 'test/unit/**/*.test.?(c|m)js'",
-    "test:integration": "node --test 'test/integration/**/*.test.?(c|m)js'",
+    "test:unit": "node --test 'test/unit/**/*.test.mjs' 'test/unit/**/*.test.cjs'",
+    "test:integration": "node --test 'test/integration/**/*.test.mjs' 'test/integration/**/*.test.cjs'",
     "test:e2e": "playwright test",
     "test:ci": "npm run test:unit && npm run test:integration"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "repository": {
     "type": "git",

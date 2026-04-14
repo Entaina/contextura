@@ -15,6 +15,8 @@ import { versionTypeBadge } from './js/domain/version-badge.js'
 import { treeStore } from './js/state/tree-store.js'
 import { panelStore } from './js/state/panel-store.js'
 import { selectionStore } from './js/state/selection-store.js'
+import { connectSSE } from './js/sse-client.js'
+import { connectMenuActions } from './js/electron-bridge.js'
 
 // ============================================================
 // State
@@ -1483,25 +1485,21 @@ function setupKeybindings () {
 // ============================================================
 
 function setupSSE () {
-  const es = new EventSource('/sse')
-  es.onmessage = (e) => {
-    const data = JSON.parse(e.data)
-    if (data.type === 'change') {
-      loadTree().then(() => {
-        if (!searchInput.value.trim()) refreshTree()
-      })
-      // Reload any open panel for this file (if not dirty and not just saved by this client)
-      for (const s of panelStore.values()) {
-        if (data.path.endsWith(s.path) && !s.isDirty) {
-          if (!s.renderer.consumeJustSaved()) {
-            s.renderer.loadContent()
-          }
-          // The dirty state vs HEAD may have changed — invalidate cached timeline
-          if (s.renderer._historyView) s.renderer._historyView.invalidate()
+  connectSSE((data) => {
+    loadTree().then(() => {
+      if (!searchInput.value.trim()) refreshTree()
+    })
+    // Reload any open panel for this file (if not dirty and not just saved by this client)
+    for (const s of panelStore.values()) {
+      if (data.path.endsWith(s.path) && !s.isDirty) {
+        if (!s.renderer.consumeJustSaved()) {
+          s.renderer.loadContent()
         }
+        // The dirty state vs HEAD may have changed — invalidate cached timeline
+        if (s.renderer._historyView) s.renderer._historyView.invalidate()
       }
     }
-  }
+  })
 }
 
 // ============================================================
@@ -1580,35 +1578,19 @@ async function init () {
   // Handle window resize
   window.addEventListener('resize', () => layoutDockview())
 
-  // Electron desktop bridge — forward native menu actions to existing UI handlers.
-  // No-op in the browser build (window.electronAPI is undefined).
-  if (window.electronAPI?.onMenuAction) {
-    window.electronAPI.onMenuAction((action) => {
-      switch (action) {
-        case 'new-file':
-          btnNewFile?.click()
-          break
-        case 'toggle-sidebar':
-          toggleSidebar()
-          break
-        case 'save':
-          saveActiveFile()
-          break
-        case 'toggle-history': {
-          const active = dockview?.activePanel
-          if (!active) return
-          const state = panelStore.get(active.id)
-          const renderer = state?.renderer
-          if (!renderer) return
-          if (renderer._mode === 'history') renderer._exitHistoryMode()
-          else renderer._enterHistoryMode()
-          break
-        }
-        default:
-          break
-      }
-    })
-  }
+  connectMenuActions({
+    'new-file': () => btnNewFile?.click(),
+    'toggle-sidebar': toggleSidebar,
+    save: saveActiveFile,
+    'toggle-history': () => {
+      const active = dockview?.activePanel
+      if (!active) return
+      const renderer = panelStore.get(active.id)?.renderer
+      if (!renderer) return
+      if (renderer._mode === 'history') renderer._exitHistoryMode()
+      else renderer._enterHistoryMode()
+    },
+  })
 }
 
 init().catch(console.error)

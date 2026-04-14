@@ -17,6 +17,9 @@ import { panelStore } from './js/state/panel-store.js'
 import { selectionStore } from './js/state/selection-store.js'
 import { connectSSE } from './js/sse-client.js'
 import { connectMenuActions } from './js/electron-bridge.js'
+import { WelcomeWatermark } from './js/ui/dockview/welcome.js'
+import { DirtyTabRenderer } from './js/ui/dockview/dirty-tab.js'
+import { createLayoutStore } from './js/ui/dockview/layout-store.js'
 
 // ============================================================
 // State
@@ -25,8 +28,10 @@ import { connectMenuActions } from './js/electron-bridge.js'
 /** @type {DockviewComponent} */
 let dockview = null
 
+/** @type {ReturnType<typeof createLayoutStore> | null} */
+let layoutStore = null
+
 let sidebarVisible = true
-let isRestoringLayout = false
 
 // ============================================================
 // DOM references
@@ -835,74 +840,6 @@ class HistoryView {
   }
 }
 
-/** Custom tab renderer with dirty indicator and close button */
-class DirtyTabRenderer {
-  constructor () {
-    this.element = document.createElement('div')
-    this.element.className = 'cv-tab'
-
-    this._dirty = document.createElement('span')
-    this._dirty.className = 'cv-tab-dirty hidden'
-    this._dirty.textContent = '\u25CF'
-
-    this._label = document.createElement('span')
-    this._label.className = 'cv-tab-label'
-
-    this._close = document.createElement('span')
-    this._close.className = 'cv-tab-close'
-    this._close.textContent = '\u00D7'
-
-    this.element.appendChild(this._dirty)
-    this.element.appendChild(this._label)
-    this.element.appendChild(this._close)
-
-    this._api = null
-  }
-
-  init (params) {
-    this._api = params.api
-    const title = params.api.title || params.api.id.split('/').pop()
-    this._label.textContent = title
-
-    // Update dirty indicator when panel params change
-    params.api.onDidParametersChange((e) => {
-      const isDirty = e.params?.dirty === true
-      this._dirty.classList.toggle('hidden', !isDirty)
-    })
-
-    // Close handler with unsaved confirmation
-    this._close.addEventListener('pointerdown', (e) => e.preventDefault())
-    this._close.addEventListener('click', (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      const s = panelStore.get(this._api.id)
-      if (s?.isDirty) {
-        if (!confirm('Hay cambios sin guardar. \u00BFCerrar sin guardar?')) return
-      }
-      this._api.close()
-    })
-  }
-
-  dispose () {}
-}
-
-/** Watermark shown when no panels are open */
-class WelcomeWatermark {
-  constructor () {
-    this.element = document.createElement('div')
-    this.element.className = 'welcome'
-    this.element.innerHTML = `
-      <div class="welcome-inner">
-        <h1>Contextura</h1>
-        <p>Selecciona un archivo del \u00E1rbol para empezar.</p>
-      </div>
-    `
-  }
-
-  init () {}
-  dispose () {}
-}
-
 // ============================================================
 // Dockview initialization
 // ============================================================
@@ -917,6 +854,8 @@ function initDockview () {
     createWatermarkComponent: () => new WelcomeWatermark(),
   })
 
+  layoutStore = createLayoutStore({ dockview, layoutDockview })
+
   // Track active panel → update sidebar highlight
   dockview.onDidActivePanelChange((e) => {
     if (e?.id) {
@@ -928,13 +867,13 @@ function initDockview () {
 
   // Persist layout on changes (debounced to avoid race conditions during fromJSON)
   dockview.onDidRemovePanel(() => {
-    scheduleSaveLayout()
+    layoutStore.schedule()
     if (!dockview.activePanel) {
       fileTreeEl.querySelectorAll('.tree-item.active').forEach(el => el.classList.remove('active'))
     }
   })
-  dockview.onDidAddPanel(() => scheduleSaveLayout())
-  dockview.onDidLayoutChange(() => scheduleSaveLayout())
+  dockview.onDidAddPanel(() => layoutStore.schedule())
+  dockview.onDidLayoutChange(() => layoutStore.schedule())
 
   // External drag-and-drop: show overlay when dragging files from sidebar
   dockview.onUnhandledDragOverEvent((event) => {
@@ -978,7 +917,7 @@ function initDockview () {
   layoutDockview()
 
   // Restore layout or last file
-  if (!restoreLayout()) {
+  if (!layoutStore.restore()) {
     const last = storage.lastFile.get()
     if (last) openFile(last)
   }
@@ -1500,50 +1439,6 @@ function setupSSE () {
       }
     }
   })
-}
-
-// ============================================================
-// Layout persistence
-// ============================================================
-
-let _saveTimer = null
-
-function scheduleSaveLayout () {
-  clearTimeout(_saveTimer)
-  _saveTimer = setTimeout(saveLayout, 300)
-}
-
-function saveLayout () {
-  if (!dockview || isRestoringLayout) return
-  try {
-    const data = dockview.toJSON()
-    // Only save if there are panels — avoid overwriting with empty state
-    if (data?.panels && Object.keys(data.panels).length > 0) {
-      storage.layout.set(JSON.stringify(data))
-    }
-  } catch (e) {
-    console.warn('Failed to save layout', e)
-  }
-}
-
-function restoreLayout () {
-  const saved = storage.layout.get()
-  if (!saved) return false
-  try {
-    const data = JSON.parse(saved)
-    if (!data?.panels || Object.keys(data.panels).length === 0) return false
-    isRestoringLayout = true
-    dockview.fromJSON(data)
-    layoutDockview()
-    // Keep guard active briefly to block any async events from fromJSON
-    setTimeout(() => { isRestoringLayout = false }, 500)
-    return true
-  } catch (e) {
-    isRestoringLayout = false
-    console.warn('Failed to restore layout', e)
-    storage.layout.remove()
-    return false
-  }
 }
 
 // ============================================================

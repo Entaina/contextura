@@ -45,10 +45,9 @@ dmg:
     width: 540
     height: 380
 
-# Auto-update channel (GitHub Releases). Binaries publish to Entaina/contextura,
-# a dedicated public release repo separate from where the source code lives.
-# This decoupling means the release URL is stable even if we later extract the
-# source out of the PARA monorepo into its own repo. See CLAUDE.md § Release process.
+# Auto-update channel (GitHub Releases). Binaries publish to the same repo
+# that hosts the source, Entaina/contextura. electron-updater clients read
+# `latest-mac.yml` from the `releases/latest` endpoint of this repo.
 publish:
   provider: github
   owner: Entaina

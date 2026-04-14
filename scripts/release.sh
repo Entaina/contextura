@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 #
-# Release a new version of Contextura.
+# Release a new version of Contextura — BREAK-GLASS FALLBACK.
+#
+# ⚠️  PREFER the GitHub Actions release workflow (.github/workflows/release.yml).
+#     Use this script ONLY when Actions is unavailable or for bootstrapping.
+#     See docs/release.md for the normal flow.
+#
+# This script does NOT update CHANGELOG.md. If you use it, edit the changelog
+# by hand before or after releasing.
 #
 # Usage:
 #   ./scripts/release.sh patch       # 0.1.0 → 0.1.1  (default)
@@ -67,9 +74,8 @@ export GH_TOKEN
 
 if [[ "$MODE" != "--no-bump" ]]; then
   echo "→ Bumping version ($MODE)"
-  # --no-git-tag-version + manual commit avoids npm's default `v%s` tag
-  # which would collide with other tools/ subprojects if we ever release them.
-  # We use tag prefix `contextura-v<version>` for disambiguation.
+  # Manual bump + commit (instead of `npm version`) so we control the
+  # commit message format and avoid npm's default tagging behaviour.
   CURRENT=$(node -p "require('./package.json').version")
   NEXT=$(node -p "
     const semver = require('semver') || null;
@@ -104,7 +110,7 @@ if [[ "$MODE" != "--no-bump" ]]; then
 
   git add package.json package-lock.json
   git commit -m "chore(contextura): release v$NEXT"
-  git tag "contextura-v$NEXT"
+  git tag "v$NEXT"
 fi
 
 VERSION=$(node -p "require('./package.json').version")

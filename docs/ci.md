@@ -42,6 +42,18 @@ Dos jobs:
 
 Los comandos para correrlos en local están en [desarrollo.md](desarrollo.md).
 
+### 6. Release
+
+El workflow [`release.yml`](../.github/workflows/release.yml) construye y publica las releases. Está separado de las capas anteriores porque no valida código: produce artefactos. Dos jobs encadenados en el mismo run:
+
+- **`release-please`** — `runs-on: ubuntu-latest`. Corre [`googleapis/release-please-action@v4`](https://github.com/googleapis/release-please-action) contra la config de [`.release-please-config.json`](../.release-please-config.json) y el manifest de [`.release-please-manifest.json`](../.release-please-manifest.json). En cada push a `main` mantiene un pull request abierto con el bump de versión y la nueva sección de `CHANGELOG.md`. Cuando el PR se mergea, crea el tag `v<version>` y un GitHub Release en **modo draft**.
+
+- **`build-mac`** — `runs-on: macos-latest`, condicional (`if: release_created`). Instala dependencias con cache npm, regenera el icono, corre `npx electron-builder --mac --publish always` para construir el DMG universal y subirlo al draft, verifica que los 3 assets esperados están presentes (DMG, blockmap, `latest-mac.yml`) y finalmente publica el release con `gh release edit --draft=false`. El tiempo end-to-end es de ~6–10 minutos.
+
+El modo draft es intencional: evita que `electron-updater` vea un release "más reciente" sin los assets todavía subidos, lo que causaría 404 transitorios en los clientes. La transición a publicado es atómica al final del job.
+
+El flujo de uso humano (cómo cortar, revisar y verificar una release) vive en [release.md](release.md).
+
 ## Cuándo se ejecuta
 
 - Cada push a `main`.

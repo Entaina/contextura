@@ -27,7 +27,10 @@ jobs:
       - uses: googleapis/release-please-action@v4
         id: rp
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # PAT instead of GITHUB_TOKEN because the Entaina org policy
+          # forbids workflows from opening pull requests. The PAT is
+          # stored as a repo secret; see docs/release.md for setup.
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json
 

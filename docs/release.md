@@ -26,6 +26,26 @@ El job `build-mac` tarda ~6–10 minutos en total. Durante ese tiempo el release
 - **Indicar breaking change**: usar `feat!:`, `fix!:` o un footer `BREAKING CHANGE:`. Pre-1.0 Contextura tiene `bump-minor-pre-major: true`, así que un breaking no escala a mayor automáticamente — debes forzarlo con `Release-As`.
 - **Editar el release PR a mano**: cualquier commit que hagas sobre la rama del PR de release-please será preservado; el bot no reescribe lo que tú editas.
 
+## Setup único del pipeline
+
+Por política de la organización Entaina, `GITHUB_TOKEN` (el token built-in del workflow) no puede abrir pull requests. release-please necesita poder hacerlo para mantener el release PR, así que usa un PAT guardado como secret del repo.
+
+**Crear el secret** (una sola vez):
+
+1. Crea un [fine-grained PAT](https://github.com/settings/personal-access-tokens/new) limitado a `Entaina/contextura` con permisos:
+   - `Contents: Read and write`
+   - `Pull requests: Read and write`
+   - `Workflows: Read and write`
+2. Guárdalo como secret del repo:
+
+   ```bash
+   gh secret set RELEASE_PLEASE_TOKEN --repo Entaina/contextura
+   ```
+
+   (O reutiliza el token existente del Keychain: `security find-generic-password -a contextura -s github-release-token -w | gh secret set RELEASE_PLEASE_TOKEN --repo Entaina/contextura`).
+
+El resto del workflow (build, upload de assets, flip draft→published) sigue usando el `GITHUB_TOKEN` built-in — sólo el step de release-please-action necesita el PAT.
+
 ## Versiones y tags
 
 - Formato de tag: **`v<version>`**. El tag histórico `contextura-v0.1.1` queda archivado y no se renombra; a partir de `v0.1.2` usamos el prefijo plano.

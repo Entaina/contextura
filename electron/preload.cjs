@@ -7,7 +7,7 @@
  * ESM (`require` is injected by the runtime).
  */
 
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('electronAPI', {
   isElectron: true,
@@ -28,8 +28,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
    * Supported actions: 'new-file', 'toggle-sidebar', 'toggle-history', 'save'.
    */
   onMenuAction: (callback) => {
-    const listener = (_event, action) => callback(action);
-    ipcRenderer.on('menu:action', listener);
-    return () => ipcRenderer.removeListener('menu:action', listener);
+    const listener = (_event, action) => callback(action)
+    ipcRenderer.on('menu:action', listener)
+    return () => ipcRenderer.removeListener('menu:action', listener)
   },
-});
+})

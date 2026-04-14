@@ -13,115 +13,117 @@
  * still load the ESM `server.mjs` via `await import()`.
  */
 
-const { app, BrowserWindow, dialog, Menu, ipcMain, shell } = require('electron');
-const { basename, join } = require('node:path');
-const { existsSync, statSync } = require('node:fs');
+const { app, BrowserWindow, dialog, Menu, ipcMain, shell } = require('electron')
+const { basename, join } = require('node:path')
+const { existsSync, statSync } = require('node:fs')
 
-const { loadConfig, saveConfig } = require('./config.cjs');
-const { initAutoUpdater } = require('./updater.cjs');
+const { loadConfig, saveConfig } = require('./config.cjs')
+const { initAutoUpdater } = require('./updater.cjs')
 
-const PRELOAD_PATH = join(__dirname, 'preload.cjs');
+const PRELOAD_PATH = join(__dirname, 'preload.cjs')
 
-let mainWindow = null;
-let serverHandle = null;
-let startServer = null; // lazy-loaded from ESM ../server.mjs
+let mainWindow = null
+let serverHandle = null
+let startServer = null // lazy-loaded from ESM ../server.mjs
 
-app.setName('Contextura');
+app.setName('Contextura')
 
-async function loadStartServer() {
-  if (startServer) return startServer;
-  const mod = await import('../server.mjs');
-  startServer = mod.startServer;
-  return startServer;
+async function loadStartServer () {
+  if (startServer) return startServer
+  const mod = await import('../server.mjs')
+  startServer = mod.startServer
+  return startServer
 }
 
-function isValidDirectory(path) {
-  if (!path) return false;
+function isValidDirectory (path) {
+  if (!path) return false
   try {
-    return statSync(path).isDirectory();
+    return statSync(path).isDirectory()
   } catch {
-    return false;
+    return false
   }
 }
 
-async function pickFolder(defaultPath) {
+async function pickFolder (defaultPath) {
   const result = await dialog.showOpenDialog({
     title: 'Open folder',
     message: 'Select the folder Contextura should browse',
     defaultPath: defaultPath && existsSync(defaultPath) ? defaultPath : app.getPath('home'),
     properties: ['openDirectory', 'createDirectory'],
-  });
-  if (result.canceled || result.filePaths.length === 0) return null;
-  return result.filePaths[0];
+  })
+  if (result.canceled || result.filePaths.length === 0) return null
+  return result.filePaths[0]
 }
 
-async function ensureRootPath(config) {
-  if (isValidDirectory(config.rootPath)) return config.rootPath;
-  const picked = await pickFolder(config.rootPath);
-  if (!picked) return null;
-  saveConfig({ rootPath: picked });
-  return picked;
+async function ensureRootPath (config) {
+  if (isValidDirectory(config.rootPath)) return config.rootPath
+  const picked = await pickFolder(config.rootPath)
+  if (!picked) return null
+  saveConfig({ rootPath: picked })
+  return picked
 }
 
-async function swapServer(rootPath) {
+async function swapServer (rootPath) {
   if (serverHandle) {
-    try { await serverHandle.stop(); } catch (err) { console.warn('[main] stop failed:', err.message); }
-    serverHandle = null;
+    try { await serverHandle.stop() } catch (err) { console.warn('[main] stop failed:', err.message) }
+    serverHandle = null
   }
-  const start = await loadStartServer();
-  serverHandle = await start({ rootPath, port: 0 });
-  return serverHandle;
+  const start = await loadStartServer()
+  serverHandle = await start({ rootPath, port: 0 })
+  return serverHandle
 }
 
-function updateWindowTitle(rootPath) {
-  if (!mainWindow) return;
-  mainWindow.setTitle(`Contextura — ${basename(rootPath)}`);
+function updateWindowTitle (rootPath) {
+  if (!mainWindow) return
+  mainWindow.setTitle(`Contextura — ${basename(rootPath)}`)
 }
 
-async function openFolderFlow() {
-  const config = loadConfig();
-  const picked = await pickFolder(config.rootPath);
-  if (!picked) return null;
-  if (picked === config.rootPath && serverHandle) return picked;
+async function openFolderFlow () {
+  const config = loadConfig()
+  const picked = await pickFolder(config.rootPath)
+  if (!picked) return null
+  if (picked === config.rootPath && serverHandle) return picked
 
-  saveConfig({ rootPath: picked });
-  await swapServer(picked);
+  saveConfig({ rootPath: picked })
+  await swapServer(picked)
   if (mainWindow && serverHandle) {
-    mainWindow.loadURL(serverHandle.url);
-    updateWindowTitle(picked);
+    mainWindow.loadURL(serverHandle.url)
+    updateWindowTitle(picked)
   }
-  return picked;
+  return picked
 }
 
-function buildMenu() {
-  const isMac = process.platform === 'darwin';
+function buildMenu () {
+  const isMac = process.platform === 'darwin'
 
   const sendAction = (action) => {
-    if (mainWindow) mainWindow.webContents.send('menu:action', action);
-  };
+    if (mainWindow) mainWindow.webContents.send('menu:action', action)
+  }
 
   const template = [
-    ...(isMac ? [{
-      label: app.name,
-      submenu: [
-        { role: 'about' },
-        { type: 'separator' },
-        { role: 'services' },
-        { type: 'separator' },
-        { role: 'hide' },
-        { role: 'hideOthers' },
-        { role: 'unhide' },
-        { type: 'separator' },
-        { role: 'quit' },
-      ],
-    }] : []),
+    ...(isMac
+      ? [{
+          label: app.name,
+          submenu: [
+            { role: 'about' },
+            { type: 'separator' },
+            { role: 'services' },
+            { type: 'separator' },
+            { role: 'hide' },
+            { role: 'hideOthers' },
+            { role: 'unhide' },
+            { type: 'separator' },
+            { role: 'quit' },
+          ],
+        }]
+      : []),
     {
       label: 'File',
       submenu: [
         {
           label: 'Open Folder…',
           accelerator: 'CmdOrCtrl+O',
-          click: () => { openFolderFlow(); },
+          click: () => { openFolderFlow() },
         },
         { type: 'separator' },
         {
@@ -179,12 +181,14 @@ function buildMenu() {
       submenu: [
         { role: 'minimize' },
         { role: 'zoom' },
-        ...(isMac ? [
-          { type: 'separator' },
-          { role: 'front' },
-        ] : [
-          { role: 'close' },
-        ]),
+        ...(isMac
+          ? [
+              { type: 'separator' },
+              { role: 'front' },
+            ]
+          : [
+              { role: 'close' },
+            ]),
       ],
     },
     {
@@ -196,14 +200,14 @@ function buildMenu() {
         },
       ],
     },
-  ];
+  ]
 
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template))
 }
 
-function createWindow(url) {
-  const config = loadConfig();
-  const { width, height } = config.windowBounds || { width: 1400, height: 900 };
+function createWindow (url) {
+  const config = loadConfig()
+  const { width, height } = config.windowBounds || { width: 1400, height: 900 }
 
   mainWindow = new BrowserWindow({
     width,
@@ -218,64 +222,64 @@ function createWindow(url) {
       nodeIntegration: false,
       sandbox: false,
     },
-  });
+  })
 
-  mainWindow.loadURL(url);
+  mainWindow.loadURL(url)
 
   mainWindow.on('close', () => {
-    if (!mainWindow) return;
-    const [w, h] = mainWindow.getSize();
-    saveConfig({ windowBounds: { width: w, height: h } });
-  });
+    if (!mainWindow) return
+    const [w, h] = mainWindow.getSize()
+    saveConfig({ windowBounds: { width: w, height: h } })
+  })
 
   mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
+    mainWindow = null
+  })
 }
 
-function wireIpc() {
-  ipcMain.handle('dialog:openFolder', async () => openFolderFlow());
-  ipcMain.handle('app:getRootPath', () => serverHandle?.rootPath || null);
-  ipcMain.handle('app:getVersion', () => app.getVersion());
+function wireIpc () {
+  ipcMain.handle('dialog:openFolder', async () => openFolderFlow())
+  ipcMain.handle('app:getRootPath', () => serverHandle?.rootPath || null)
+  ipcMain.handle('app:getVersion', () => app.getVersion())
 }
 
-async function bootstrap() {
-  wireIpc();
+async function bootstrap () {
+  wireIpc()
 
-  const config = loadConfig();
-  const rootPath = await ensureRootPath(config);
+  const config = loadConfig()
+  const rootPath = await ensureRootPath(config)
 
   if (!rootPath) {
-    app.quit();
-    return;
+    app.quit()
+    return
   }
 
-  const start = await loadStartServer();
-  serverHandle = await start({ rootPath, port: 0 });
-  buildMenu();
-  createWindow(serverHandle.url);
-  updateWindowTitle(rootPath);
+  const start = await loadStartServer()
+  serverHandle = await start({ rootPath, port: 0 })
+  buildMenu()
+  createWindow(serverHandle.url)
+  updateWindowTitle(rootPath)
 
-  initAutoUpdater().catch((err) => console.warn('[updater] init failed:', err.message));
+  initAutoUpdater().catch((err) => console.warn('[updater] init failed:', err.message))
 }
 
 app.whenReady().then(bootstrap).catch((err) => {
-  console.error('[main] bootstrap failed:', err);
-  dialog.showErrorBox('Contextura', `Failed to start: ${err.message}`);
-  app.quit();
-});
+  console.error('[main] bootstrap failed:', err)
+  dialog.showErrorBox('Contextura', `Failed to start: ${err.message}`)
+  app.quit()
+})
 
 app.on('window-all-closed', async () => {
   if (serverHandle) {
-    try { await serverHandle.stop(); } catch { /* noop */ }
-    serverHandle = null;
+    try { await serverHandle.stop() } catch { /* noop */ }
+    serverHandle = null
   }
-  if (process.platform !== 'darwin') app.quit();
-});
+  if (process.platform !== 'darwin') app.quit()
+})
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0 && serverHandle) {
-    createWindow(serverHandle.url);
-    updateWindowTitle(serverHandle.rootPath);
+    createWindow(serverHandle.url)
+    updateWindowTitle(serverHandle.rootPath)
   }
-});
+})

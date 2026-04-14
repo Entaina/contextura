@@ -38,7 +38,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # Node 22+ is required: `node --test` only honors glob patterns
+          # since Node 21, and the test scripts use them to pick .test.mjs
+          # and .test.cjs files under test/{unit,integration}/**.
+          node-version: '22'
           cache: npm
       - run: npm ci
       - run: npm run test:ci
@@ -54,7 +57,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
       - run: npm ci
       - run: npm run test:e2e

@@ -1,6 +1,6 @@
 {
   "name": "contextura",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Editor nativo para gestionar contextos organizacionales en markdown. Historial, diffs inline estilo Google Docs y live reload.",
   "author": "Entaina",
   "type": "module",

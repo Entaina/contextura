@@ -23,7 +23,7 @@ Los hallazgos de ambas se publican como SARIF en la pestaña **Security → Code
 
 ### 3. Dependencias
 
-- **npm audit** se ejecuta en cada push y pull request para detectar CVEs conocidas en el árbol de dependencias. El umbral está temporalmente en `critical` porque los avisos abiertos de Electron 33 impiden subirlo a `high` sin upgrade previo; el objetivo es volver a `high` una vez se haga ese upgrade.
+- **npm audit** se ejecuta en cada push y pull request para detectar CVEs conocidas en el árbol de dependencias. El umbral actual es `high`: el pipeline falla ante cualquier advisory de severidad alta o crítica.
 - **Dependabot** abre pull requests semanales con las actualizaciones disponibles, agrupando el stack `electron*` en un único PR y el resto de devDependencies en otro para reducir el ruido de revisión.
 
 ### 4. Secretos

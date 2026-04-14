@@ -9,7 +9,8 @@ export default [
       'out/**',
       'release/**',
       'build/**',
-      '**/.history/**'
+      '**/.history/**',
+      '.claude/**'
     ]
   },
   ...neostandard({

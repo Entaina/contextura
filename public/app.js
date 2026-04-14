@@ -25,6 +25,7 @@ import {
 } from './js/ui/tree.js'
 import { initSidebar, toggleSidebar } from './js/ui/sidebar.js'
 import { initContextPane, toggleContextPane } from './js/ui/context-pane/context-pane.js'
+import { initContextHost, setActiveFile, invalidateHistory } from './js/ui/context-pane/context-host.js'
 import { initKeybindings } from './js/ui/keybindings.js'
 
 const searchInput = document.getElementById('search-input')
@@ -33,7 +34,17 @@ const btnNewFile = document.getElementById('btn-new-file')
 async function init () {
   treeStore.set(await api.getTree())
 
-  const dv = initDockview()
+  const dv = initDockview({
+    onActivePanelChange: (id) => setActiveFile(id),
+  })
+
+  initContextHost({
+    onVersionSelect: (path, version) => {
+      const active = dv.dockview?.activePanel
+      if (!active || active.id !== path) return
+      panelStore.get(active.id)?.renderer?.showHistoryVersion(version)
+    },
+  })
 
   initSidebar({ onLayoutChange: dv.layoutDockview })
   initContextPane({ onLayoutChange: dv.layoutDockview })
@@ -63,6 +74,7 @@ async function onServerFileChange (data) {
     if (!data.path.endsWith(s.path) || s.isDirty) continue
     if (!s.renderer.consumeJustSaved()) s.renderer.loadContent()
     s.renderer.invalidateHistory()
+    invalidateHistory(s.path)
   }
 }
 

@@ -95,6 +95,23 @@ export class EditorPanelRenderer {
     else this._enterHistoryMode()
   }
 
+  /**
+   * Show a specific version's diff inside this editor panel. Called from the
+   * right-side context pane when the user clicks a commit. Temporary bridge
+   * on top of the inline history view — Phase 3 replaces it with a dedicated
+   * diff mode.
+   * @param {object} version History version descriptor (sha, status, …).
+   */
+  showHistoryVersion (version) {
+    this._enterHistoryMode()
+    if (!this._historyView) return
+    if (version?.status === 'U') {
+      this._historyView.selectUncommittedVersion()
+    } else if (version?.sha) {
+      this._historyView.selectVersion(version)
+    }
+  }
+
   /** Mark the embedded history view as stale so its next open refetches. */
   invalidateHistory () {
     if (this._historyView) this._historyView.invalidate()

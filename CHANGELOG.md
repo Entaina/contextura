@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Releases are managed automatically by [release-please](https://github.com/googleapis/release-please)
 from [Conventional Commits](https://www.conventionalcommits.org/) in the git history.
 
+## [0.3.0](https://github.com/Entaina/contextura/compare/v0.2.0...v0.3.0) (2026-04-14)
+
+
+### Features
+
+* **theme:** rebuild UI on own light theme from DS palette ([9dac3a4](https://github.com/Entaina/contextura/commit/9dac3a4328fa3b1236b9bb9afa4d0752f41295ac))
+
 ## [0.2.0](https://github.com/Entaina/contextura/compare/v0.1.1...v0.2.0) (2026-04-14)
 
 

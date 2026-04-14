@@ -20,7 +20,7 @@
     "url": "https://github.com/Entaina/contextura/issues"
   },
   "dependencies": {
-    "chokidar": "^3"
+    "chokidar": "^5"
   },
   "devDependencies": {
     "@doyensec/electronegativity": "^1.10.3",

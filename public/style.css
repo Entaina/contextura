@@ -406,6 +406,30 @@ body .dockview-theme-entaina .dv-tabs-and-actions-container {
   color: var(--text) !important;
 }
 
+/* Overflow dropdown (chevron + contador de tabs ocultas) — contraste
+   legible sobre el fondo copperfield-50 de la cabecera. */
+.dockview-theme-entaina .dv-right-actions-container,
+.dockview-theme-entaina .dv-tabs-overflow-dropdown-default {
+  color: var(--on-light);
+}
+.dockview-theme-entaina .dv-tabs-overflow-dropdown-default {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.dockview-theme-entaina .dv-tabs-overflow-dropdown-default .dv-svg {
+  fill: var(--on-light);
+}
+.dockview-theme-entaina .dv-tabs-overflow-dropdown-default:hover {
+  color: var(--text);
+}
+.dockview-theme-entaina .dv-tabs-overflow-dropdown-default:hover .dv-svg {
+  fill: var(--text);
+}
+
 /* Sashes dinámicos entre grupos de paneles (cuando divides la vista).
    Dockview da al sash 4px de área de arrastre; pintamos solo una
    línea de 1px en el centro con un ::before, dejando el resto
@@ -571,13 +595,17 @@ body .dockview-theme-entaina .dv-tabs-and-actions-container {
 }
 
 
-/* Toolbar — ocupa el ancho del panel */
+/* Toolbar — ocupa el ancho completo del panel sin padding */
 .panel-tui-editor .toastui-editor-toolbar {
   max-width: none;
   width: 100%;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  padding: 4px 8px;
+  padding: 0;
+}
+
+.panel-tui-editor .toastui-editor-defaultUI-toolbar {
+  padding: 0;
 }
 
 .panel-tui-editor .toastui-editor-toolbar-group button {

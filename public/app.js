@@ -12,7 +12,6 @@ import { DockviewComponent } from 'https://esm.sh/dockview-core@5'
 // ============================================================
 
 let tree = []
-let fileIndex = {}
 let selectedPath = null
 let selectedType = null
 
@@ -1594,7 +1593,7 @@ function setupSSE () {
         if (!searchInput.value.trim()) refreshTree()
       })
       // Reload any open panel for this file (if not dirty and not just saved by this client)
-      for (const [panelId, s] of panelState) {
+      for (const s of panelState.values()) {
         if (data.path.endsWith(s.path) && !s.isDirty) {
           if (!s.renderer.consumeJustSaved()) {
             s.renderer.loadContent()
@@ -1661,11 +1660,6 @@ async function loadTree () {
   tree = await res.json()
 }
 
-async function loadIndex () {
-  const res = await fetch('/api/index')
-  fileIndex = await res.json()
-}
-
 // ============================================================
 // Utils
 // ============================================================
@@ -1679,7 +1673,7 @@ function escapeHtml (str) {
 // ============================================================
 
 async function init () {
-  await Promise.all([loadTree(), loadIndex()])
+  await loadTree()
 
   renderTree(tree, fileTreeEl)
   if (window.lucide) lucide.createIcons()

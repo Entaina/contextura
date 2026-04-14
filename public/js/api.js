@@ -16,10 +16,7 @@
  */
 
 const q = (params) =>
-  Object.entries(params)
-    .filter(([, v]) => v != null)
-    .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
-    .join('&')
+  new URLSearchParams(Object.entries(params).filter(([, v]) => v != null)).toString()
 
 /**
  * Fetch the full file tree from the configured root.

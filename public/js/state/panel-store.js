@@ -1,11 +1,7 @@
 /**
- * Panel state store. Holds per-Dockview-panel bookkeeping: the file path
- * displayed, the Toast UI editor instance, dirty status, and a back-reference
- * to the renderer that owns the panel. Keyed by panel id (which, by
- * convention, equals the file path for editor panels).
- *
- * The API mirrors a subset of `Map` so renaming callsites from `panelState`
- * to `panelStore` is a pure identifier change.
+ * Per-Dockview-panel bookkeeping: file path, Toast UI editor instance,
+ * dirty flag, and a back-reference to the renderer. Keyed by panel id,
+ * which for editor panels equals the file path.
  */
 
 /**
@@ -28,12 +24,4 @@ export const panelStore = {
   delete: (id) => { _panels.delete(id) },
   /** @returns {IterableIterator<PanelState>} */
   values: () => _panels.values(),
-  /**
-   * Convenience mutator used by the editor change handler.
-   * @param {string} id @param {boolean} dirty
-   */
-  markDirty: (id, dirty) => {
-    const s = _panels.get(id)
-    if (s) s.isDirty = dirty
-  },
 }

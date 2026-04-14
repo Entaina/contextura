@@ -19,6 +19,19 @@ export function lucideIcon (name) {
 }
 
 /**
+ * Batch-refresh Lucide icons inside a subtree (or the whole document when
+ * no element is provided). Use after inserting many `<i data-lucide>` nodes
+ * at once — `lucideIcon()` is the single-icon path.
+ *
+ * @param {Element} [element] Optional root; omit to refresh the whole document.
+ */
+export function refreshIcons (element) {
+  if (!window.lucide) return
+  if (element) window.lucide.createIcons({ elements: [element] })
+  else window.lucide.createIcons()
+}
+
+/**
  * Escape the 4 HTML-significant characters. Use before interpolating
  * user-controlled text into an `innerHTML` string.
  *

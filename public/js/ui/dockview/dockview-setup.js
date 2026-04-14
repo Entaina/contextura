@@ -10,13 +10,22 @@ import { DockviewComponent } from 'https://esm.sh/dockview-core@5'
 import * as storage from '../../storage.js'
 import { panelStore } from '../../state/panel-store.js'
 import { selectionStore } from '../../state/selection-store.js'
+import { basename } from '../../domain/path.js'
 import { EditorPanelRenderer } from './editor-panel.js'
 import { DirtyTabRenderer } from './dirty-tab.js'
 import { WelcomeWatermark } from './welcome.js'
 import { createLayoutStore } from './layout-store.js'
-import { markActive, revealPath, clearActive } from '../tree.js'
+import { markActive, revealPath, clearActive, DRAG_MIME } from '../tree.js'
 
-const DRAG_MIME = 'application/x-contextura-path'
+function buildEditorPanelOpts (path) {
+  return {
+    id: path,
+    component: 'editor',
+    tabComponent: 'dirty-tab',
+    title: basename(path),
+    params: { path },
+  }
+}
 
 /**
  * @returns {{
@@ -68,6 +77,12 @@ export function initDockview () {
     }
   })
 
+  function markPanelOpened (path) {
+    markActive(path)
+    revealPath(path)
+    storage.lastFile.set(path)
+  }
+
   dockview.onDidDrop((event) => {
     const path = event.nativeEvent.dataTransfer?.getData(DRAG_MIME)
     if (!path) return
@@ -76,13 +91,7 @@ export function initDockview () {
     if (existing) { existing.api.setActive(); return }
 
     const dirMap = { top: 'above', bottom: 'below', left: 'left', right: 'right' }
-    const opts = {
-      id: path,
-      component: 'editor',
-      tabComponent: 'dirty-tab',
-      title: path.split('/').pop(),
-      params: { path },
-    }
+    const opts = buildEditorPanelOpts(path)
 
     if (event.group) {
       opts.position = event.position === 'center'
@@ -91,9 +100,7 @@ export function initDockview () {
     }
 
     dockview.addPanel(opts)
-    markActive(path)
-    revealPath(path)
-    storage.lastFile.set(path)
+    markPanelOpened(path)
   })
 
   async function openFile (path, event) {
@@ -103,22 +110,14 @@ export function initDockview () {
       return
     }
 
-    const opts = {
-      id: path,
-      component: 'editor',
-      tabComponent: 'dirty-tab',
-      title: path.split('/').pop(),
-      params: { path },
-    }
+    const opts = buildEditorPanelOpts(path)
     if (event?.metaKey || event?.ctrlKey) {
       opts.position = { direction: 'right' }
     }
     dockview.addPanel(opts)
 
     selectionStore.setFile(path)
-    markActive(path)
-    revealPath(path)
-    storage.lastFile.set(path)
+    markPanelOpened(path)
   }
 
   function saveActiveFile () {

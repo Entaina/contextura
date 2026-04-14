@@ -1,10 +1,7 @@
 /**
- * File tree store. Holds the current tree loaded from the backend and
- * exposes read/write access plus a path lookup. The shape of a node matches
- * what `/api/tree` returns (see `api.js :: TreeNode`).
- *
- * No subscription mechanism yet — callers explicitly re-render after mutating.
- * If that gets painful, add a `subscribe()` layer in a later phase.
+ * File tree store. Holds the tree loaded from `/api/tree` (see
+ * `api.js :: TreeNode`) and exposes read/write access plus a path lookup.
+ * Callers re-render explicitly after mutating — no subscription layer.
  */
 
 /** @typedef {import('../api.js').TreeNode} TreeNode */

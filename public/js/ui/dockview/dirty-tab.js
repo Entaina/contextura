@@ -9,6 +9,7 @@
  */
 
 import { panelStore } from '../../state/panel-store.js'
+import { basename } from '../../domain/path.js'
 
 const UNSAVED_CONFIRM = 'Hay cambios sin guardar. \u00BFCerrar sin guardar?'
 
@@ -37,7 +38,7 @@ export class DirtyTabRenderer {
 
   init (params) {
     this._api = params.api
-    this._label.textContent = params.api.title || params.api.id.split('/').pop()
+    this._label.textContent = params.api.title || basename(params.api.id)
 
     params.api.onDidParametersChange((e) => {
       this._dirty.classList.toggle('hidden', e.params?.dirty !== true)

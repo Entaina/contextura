@@ -12,6 +12,7 @@
  */
 
 import * as api from './js/api.js'
+import { refreshIcons } from './js/infra/dom.js'
 import { treeStore } from './js/state/tree-store.js'
 import { panelStore } from './js/state/panel-store.js'
 import { connectSSE } from './js/sse-client.js'
@@ -41,7 +42,7 @@ async function init () {
   })
 
   renderTree(treeStore.get())
-  if (window.lucide) window.lucide.createIcons()
+  refreshIcons()
 
   initKeybindings({ save: dv.saveActiveFile, toggleSidebar })
 
@@ -59,7 +60,7 @@ async function onServerFileChange (data) {
   for (const s of panelStore.values()) {
     if (!data.path.endsWith(s.path) || s.isDirty) continue
     if (!s.renderer.consumeJustSaved()) s.renderer.loadContent()
-    if (s.renderer._historyView) s.renderer._historyView.invalidate()
+    s.renderer.invalidateHistory()
   }
 }
 
@@ -71,10 +72,7 @@ function buildMenuHandlers (dv) {
     'toggle-history': () => {
       const active = dv.dockview?.activePanel
       if (!active) return
-      const renderer = panelStore.get(active.id)?.renderer
-      if (!renderer) return
-      if (renderer._mode === 'history') renderer._exitHistoryMode()
-      else renderer._enterHistoryMode()
+      panelStore.get(active.id)?.renderer?.toggleHistory()
     },
   }
 }

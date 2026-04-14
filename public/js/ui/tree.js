@@ -1,20 +1,15 @@
 /**
- * Sidebar file tree UI — rendering, drag-and-drop, search/filter, and the
- * VS-Code-style inline file/folder creation. Consolidated into one module
- * because the sub-pieces (tree render, inline create, search) all reach
- * into the same DOM root and call each other across concerns — splitting
- * them would force circular imports and parameter sprawl without actually
- * improving readability.
- *
- * External dependencies are injected via `configureTree({ openFile,
- * getActivePanel })` once at boot; the rest of the module talks to the
- * treeStore/selectionStore/api directly.
+ * Sidebar file tree UI: rendering, drag-and-drop, search/filter, and inline
+ * file/folder creation. Call `configureTree({ openFile, getActivePanel })`
+ * once at boot; the rest of the module reads treeStore/selectionStore/api
+ * directly.
  */
 
 import * as api from '../api.js'
-import { escapeHtml, lucideIcon } from '../infra/dom.js'
+import { escapeHtml, lucideIcon, refreshIcons } from '../infra/dom.js'
 import { treeStore } from '../state/tree-store.js'
 import { selectionStore } from '../state/selection-store.js'
+import { parentPath } from '../domain/path.js'
 
 const fileTreeEl = document.getElementById('file-tree')
 const searchInput = document.getElementById('search-input')
@@ -22,7 +17,7 @@ const btnNewFile = document.getElementById('btn-new-file')
 const btnNewFolder = document.getElementById('btn-new-folder')
 const btnCollapseAll = document.getElementById('btn-collapse-all')
 
-const DRAG_MIME = 'application/x-contextura-path'
+export const DRAG_MIME = 'application/x-contextura-path'
 
 /** @type {(path: string, event?: MouseEvent) => void} */
 let openFileRef = null
@@ -53,13 +48,16 @@ export function configureTree ({ openFile, getActivePanel }) {
 // ============================================================
 
 export function renderTree (nodes, container = fileTreeEl, depth = 0) {
+  // Clearing innerHTML drops draft elements without firing their cleanup;
+  // walk and release their document-level mousedown listeners first.
+  container.querySelectorAll('[data-draft]').forEach(el => el._cleanup?.())
   container.innerHTML = ''
   if (nodes.length === 0) {
     container.innerHTML = '<div class="tree-loading">Sin resultados</div>'
     return
   }
   for (const node of nodes) container.appendChild(createTreeNode(node, depth))
-  if (window.lucide) window.lucide.createIcons({ elements: [container] })
+  refreshIcons(container)
 }
 
 function createTreeNode (node, depth) {
@@ -140,7 +138,7 @@ function createTreeNode (node, depth) {
 
 function renderTreeChildren (nodes, container, depth) {
   for (const node of nodes) container.appendChild(createTreeNode(node, depth))
-  if (window.lucide) window.lucide.createIcons({ elements: [container] })
+  refreshIcons(container)
 }
 
 export function refreshTree () {
@@ -250,6 +248,7 @@ function filterTree (query, nodes) {
 }
 
 function renderFilteredTree (nodes, container, query) {
+  container.querySelectorAll('[data-draft]').forEach(el => el._cleanup?.())
   container.innerHTML = ''
   if (nodes.length === 0) {
     container.innerHTML = '<div class="tree-loading">Sin resultados</div>'
@@ -386,9 +385,7 @@ function handleHeaderCreate (type) {
   if (selType === 'dir' && selPath) {
     contextPath = selPath
   } else if (selPath) {
-    const parts = selPath.split('/')
-    parts.pop()
-    contextPath = parts.join('/') || null
+    contextPath = parentPath(selPath)
   }
 
   if (contextPath) {

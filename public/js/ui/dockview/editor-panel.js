@@ -16,29 +16,12 @@
 import * as api from '../../api.js'
 import * as storage from '../../storage.js'
 import { panelStore } from '../../state/panel-store.js'
+import { lucideIcon } from '../../infra/dom.js'
+import { basename } from '../../domain/path.js'
 import { HistoryView } from '../history/history-view.js'
 
 const SAVED_INDICATOR_MS = 2000
 const JUST_SAVED_WINDOW_MS = 3000
-
-const HISTORY_ICON_SVG = `
-  <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
-       stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-       aria-hidden="true">
-    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-    <path d="M3 3v5h5"/>
-    <path d="M12 7v5l4 2"/>
-  </svg>
-`
-
-const BACK_ICON_SVG = `
-  <svg viewBox="0 0 24 24" width="14" height="14" fill="none"
-       stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-       aria-hidden="true">
-    <path d="M19 12H5M12 19l-7-7 7-7"/>
-  </svg>
-  Volver al editor
-`
 
 export class EditorPanelRenderer {
   constructor () {
@@ -60,12 +43,13 @@ export class EditorPanelRenderer {
     this._historyBtn = document.createElement('button')
     this._historyBtn.className = 'history-btn'
     this._historyBtn.title = 'Ver historial de versiones'
-    this._historyBtn.innerHTML = HISTORY_ICON_SVG
+    this._historyBtn.appendChild(lucideIcon('history'))
 
     this._backBtn = document.createElement('button')
     this._backBtn.className = 'back-btn hidden'
     this._backBtn.title = 'Volver al editor'
-    this._backBtn.innerHTML = BACK_ICON_SVG
+    this._backBtn.appendChild(lucideIcon('arrow-left'))
+    this._backBtn.append(' Volver al editor')
 
     this._saveBtn = document.createElement('button')
     this._saveBtn.className = 'save-btn hidden'
@@ -105,6 +89,17 @@ export class EditorPanelRenderer {
     this.loadContent()
   }
 
+  /** Public toggle for consumers outside the renderer (menu actions, etc). */
+  toggleHistory () {
+    if (this._mode === 'history') this._exitHistoryMode()
+    else this._enterHistoryMode()
+  }
+
+  /** Mark the embedded history view as stale so its next open refetches. */
+  invalidateHistory () {
+    if (this._historyView) this._historyView.invalidate()
+  }
+
   _enterHistoryMode () {
     if (this._mode === 'history') return
     this._mode = 'history'
@@ -126,7 +121,7 @@ export class EditorPanelRenderer {
     this._saveBtn.classList.add('hidden')
     this._backBtn.classList.remove('hidden')
 
-    this._breadcrumb.textContent = `Historial: ${this._path.split('/').pop()}`
+    this._breadcrumb.textContent = `Historial: ${basename(this._path)}`
 
     this._historyView.load()
   }
@@ -252,7 +247,7 @@ export class EditorPanelRenderer {
     this._indicator.textContent = 'Guardado'
     this._panelApi.updateParameters({ dirty: false })
     setTimeout(() => { this._indicator.textContent = '' }, SAVED_INDICATOR_MS)
-    if (this._historyView) this._historyView.invalidate()
+    this.invalidateHistory()
   }
 
   /** Returns true if SSE should skip reloading (just saved by this client). */

@@ -9,7 +9,6 @@ import * as api from '../api.js'
 import { escapeHtml, lucideIcon, refreshIcons } from '../infra/dom.js'
 import { treeStore } from '../state/tree-store.js'
 import { selectionStore } from '../state/selection-store.js'
-import { parentPath } from '../domain/path.js'
 
 const fileTreeEl = document.getElementById('file-tree')
 const searchInput = document.getElementById('search-input')

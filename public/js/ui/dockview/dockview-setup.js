@@ -38,7 +38,6 @@ function buildEditorPanelOpts (path) {
  */
 export function initDockview () {
   const dockviewContainer = document.getElementById('dockview-container')
-  const fileTreeEl = document.getElementById('file-tree')
 
   const dockview = new DockviewComponent(dockviewContainer, {
     createComponent: (options) => {

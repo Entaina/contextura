@@ -8,6 +8,7 @@ on:
   schedule:
     # Lunes 03:00 UTC — detecta CVEs nuevas aunque no haya cambios.
     - cron: '0 3 * * 1'
+  workflow_dispatch:
 
 # Cancelar ejecuciones obsoletas sobre la misma rama.
 concurrency:

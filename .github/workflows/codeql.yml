@@ -1,0 +1,47 @@
+# CodeQL — SAST general para JavaScript.
+#
+# IMPORTANTE: Si el repositorio pasa a PRIVADO sin GitHub Advanced Security
+# (GHAS), este workflow empezará a fallar con un error de permisos en
+# 'github/codeql-action/init'. En ese caso, sustituir el job 'analyze' por
+# Semgrep (gratis en privado):
+#
+#   - uses: returntocorp/semgrep-action@v1
+#     with:
+#       config: p/ci p/javascript p/owasp-top-ten
+#
+# y mantener los mismos triggers.
+
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Martes 03:00 UTC (escalonado respecto a ci.yml).
+    - cron: '0 3 * * 2'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: CodeQL analyze
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-and-quality
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:javascript-typescript'

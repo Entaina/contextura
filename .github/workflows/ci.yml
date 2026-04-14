@@ -41,12 +41,9 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
-      # TODO(#1): subir a --audit-level=high (o moderate) una vez resuelto el
-      # bug del main process de Electron y el upgrade a Electron 41+. Los
-      # avisos actuales de electron@33 y la rama de electron-builder no se
-      # pueden cerrar sin ese upgrade, así que temporalmente se exige
-      # únicamente 'critical'.
-      - run: npm audit --audit-level=critical
+      # Falla en severidad 'high' o superior. Subir a 'moderate' cuando el
+      # ruido transitivo se estabilice.
+      - run: npm audit --audit-level=high
 
   electronegativity:
     name: Electronegativity (SAST Electron)

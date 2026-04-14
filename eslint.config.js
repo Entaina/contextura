@@ -32,6 +32,14 @@ export default [
       globals: { ...globals.node }
     }
   },
+  // Test suite (node:test runner): Node globals.
+  {
+    files: ['test/**/*.mjs'],
+    languageOptions: {
+      sourceType: 'module',
+      globals: { ...globals.node }
+    }
+  },
   // Frontend vanilla JS: browser globals + librerías cargadas por <script>.
   {
     files: ['public/**/*.js'],

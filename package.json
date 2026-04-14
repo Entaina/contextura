@@ -7,7 +7,9 @@
   "main": "electron/main.cjs",
   "scripts": {
     "desktop": "electron .",
-    "dist": "electron-builder"
+    "dist": "electron-builder",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "repository": {
     "type": "git",
@@ -21,8 +23,11 @@
     "chokidar": "^3"
   },
   "devDependencies": {
+    "@doyensec/electronegativity": "^1.10.3",
     "electron": "^33",
     "electron-builder": "^25",
-    "electron-updater": "^6"
+    "electron-updater": "^6",
+    "eslint": "^9",
+    "neostandard": "^0.12.2"
   }
 }

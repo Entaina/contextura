@@ -24,7 +24,7 @@ mac:
         - universal
   category: public.app-category.productivity
   icon: assets/icon.icns
-  darkModeSupport: true
+  darkModeSupport: false
   # Skip electron-builder's signing pipeline (it doesn't understand the
   # codesign convention `-` for ad-hoc). We apply ad-hoc signing manually
   # via electron/afterPack.cjs so the binary isn't rejected as "damaged"

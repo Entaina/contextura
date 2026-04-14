@@ -1,15 +1,13 @@
 /* ============================================================
    Contextura — Entaina
-   Usa el Design System: data-theme="technology"
-   Variables semánticas del tema en [data-theme="technology"]:
-     --background, --surface, --surface-alt, --border
-     --text, --text-subtle
-     --primary, --primary-light, --primary-dark
-     --accent, --accent-light
-     --font-display, --font-body
-     --success, --danger
-   Paleta cruda (en :root):
-     --hoki-{50..950}, --chicago-{50..950}
+   Tema propio de Contextura, construido exclusivamente sobre la
+   paleta cruda del Entaina Design System (--hoki-*, --chicago-*,
+   --copperfield-*, --green-*, --red-*, --orange-*, --golden-tainoi-*).
+   No depende de `data-theme` ni de los temas semánticos del DS
+   (technology/innovation/people) — esos pueden evolucionar de forma
+   independiente sin arrastrar a la app.
+   Si algún día queremos cambiar el look de Contextura, se toca este
+   bloque y nada más.
    ============================================================ */
 
 *, *::before, *::after {
@@ -19,19 +17,114 @@
 }
 
 :root {
-  /* Sidebar usa shades oscuros de hoki (no hay tema dark en el DS) */
-  --sidebar-bg:          var(--hoki-900);
-  --sidebar-text:        var(--hoki-50);
-  --sidebar-muted:       var(--hoki-400);
-  --sidebar-hover:       var(--hoki-800);
+  /* ---- Tema propio de Contextura ----
+     Canvas neutro (chicago) + semillas de los 3 pilares como acentos.
+     Pilar dominante: Copperfield (Innovation). Contextura es un editor
+     creativo en evolución permanente — el permanent draft de Entaina.
+     Reparto 60/30/10:
+       · 60% neutro chicago: canvas, sidebar, tabs, bordes, texto
+       · 30% copperfield (primary): save, dirty, active state, marca
+       · 8%  golden-tainoi (secondary): historial, timeline, restore
+       · 2%  hoki (accent): isotipo, badges de refactor, info
+     Funcionales (success/danger/warning) usan green/red/orange del DS
+     y se mantienen independientes de la marca. */
+
+  /* Lienzo y superficies — chicago (croma 0, neutral puro) */
+  --background:     #ffffff;
+  --surface:        var(--chicago-50);
+  --surface-alt:    var(--chicago-100);
+  --border:         var(--chicago-200);
+  --border-strong:  var(--chicago-300);
+
+  /* Texto */
+  --text:           var(--chicago-900);
+  --text-subtle:    var(--chicago-500);
+  --text-muted:     var(--chicago-600);
+
+  /* Primario — Innovation (copperfield) */
+  --primary:        var(--copperfield-500);
+  --primary-seed:   var(--copperfield-400);
+  --primary-light:  var(--copperfield-100);
+  --primary-soft:   var(--copperfield-50);
+  --primary-dark:   var(--copperfield-700);
+  --on-primary:     #ffffff;
+
+  /* Secundario — People (golden-tainoi) */
+  --secondary:      var(--golden-tainoi-200);
+  --secondary-fill: var(--golden-tainoi-500);
+  --secondary-light:var(--golden-tainoi-100);
+  --secondary-soft: var(--golden-tainoi-50);
+  --secondary-dark: var(--golden-tainoi-700);
+  --on-secondary:   var(--chicago-950);
+
+  /* Acento — Technology (hoki) */
+  --accent:         var(--hoki-500);
+  --accent-light:   var(--hoki-100);
+  --accent-soft:    var(--hoki-50);
+  --accent-dark:    var(--hoki-700);
+  --on-accent:      #ffffff;
+
+  /* Feedback funcional */
+  --success:        var(--green-600);
+  --success-light:  var(--green-100);
+  --success-dark:   var(--green-800);
+  --danger:         var(--red-500);
+  --danger-light:   var(--red-50);
+  --danger-dark:    var(--red-700);
+  --warning:        var(--orange-400);
+  --warning-light:  var(--orange-50);
+  --warning-dark:   var(--orange-700);
+
+  /* Tipografía */
+  --font-display:   'Comfortaa', 'Space Grotesk', sans-serif;
+  --font-body:      'Lato', Inter, sans-serif;
+  --font-mono:      'JetBrains Mono', 'Fira Code', monospace;
+
+  /* ---- Sidebar (Hoki 500 seed — Technology / estructura) ----
+     Usa el color semilla de Technology como fondo sólido. La sidebar
+     representa la arquitectura del conocimiento, así que es azul
+     profundo. Cuando abres un archivo, Innovation (copperfield) entra
+     sobre Technology (hoki) con una raya cálida en el active — es el
+     gesto de "innovar sobre conocimiento estructurado". */
+  --sidebar-bg:          var(--hoki-500);
+  --sidebar-text:        var(--on-dark);
+  --sidebar-muted:       var(--hoki-200);
+  --sidebar-hover:       var(--hoki-600);
   --sidebar-active:      var(--hoki-700);
-  --sidebar-active-text: var(--golden-tainoi-200);
-  --sidebar-border:      var(--hoki-800);
+  --sidebar-active-text: var(--on-dark);
+  --sidebar-border:      var(--hoki-700);
+
+  /* Divisiones entre panes — Golden Tainoi 200 seed (People) ----
+     Las personas son el tejido que conecta estructura con innovación.
+     Los divisores físicos entre la sidebar (hoki) y el canvas
+     (blanco/copperfield) llevan el color semilla People. */
+  --pane-divider:        var(--golden-tainoi-200);
 
   --sidebar-width:  280px;
-  --header-height:  48px;
+  --header-height:  44px;
 
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  /* ---- Dockview theme vars (a nivel :root para que hereden siempre) ---- */
+  --dv-group-view-background-color: var(--background);
+  --dv-paneview-header-border-color: var(--border);
+  --dv-tabs-and-actions-container-background-color: var(--background);
+  --dv-activegroup-visiblepanel-tab-background-color: var(--background);
+  --dv-activegroup-hiddenpanel-tab-background-color: var(--background);
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--background);
+  --dv-inactivegroup-hiddenpanel-tab-background-color: var(--background);
+  --dv-tab-divider-color: transparent;
+  --dv-activegroup-visiblepanel-tab-color: var(--text);
+  --dv-activegroup-hiddenpanel-tab-color: var(--text-subtle);
+  --dv-inactivegroup-visiblepanel-tab-color: var(--text-subtle);
+  --dv-inactivegroup-hiddenpanel-tab-color: var(--text-subtle);
+  /* Divisores dinámicos entre grupos/paneles — grises de jerarquía
+     (los sashes no son "social tissue" sino separación estructural de
+     ficheros abiertos; chicago los deja como un hairline neutro). */
+  --dv-separator-border: var(--chicago-200);
+  --dv-sash-color: var(--chicago-300);
+  --dv-active-sash-color: var(--chicago-500);
+  --dv-drag-over-background-color: color-mix(in oklch, var(--primary-seed), transparent 80%);
+  --dv-drag-over-border-color: var(--primary-seed);
+  --dv-tabs-container-scrollbar-color: var(--chicago-300);
 }
 
 html, body {
@@ -87,8 +180,25 @@ body {
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--sidebar-text);
-  opacity: 0.85;
+  opacity: 0.9;
   flex: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+/* Micro-isotipo: dos semillas visibles (copperfield + golden-tainoi).
+   La sidebar ya ES hoki, así que el tercer pilar lo aporta el fondo
+   — los tres pilares siempre presentes, dos como puntos y uno como
+   superficie. */
+.sidebar-logo::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 6px;
+  flex-shrink: 0;
+  background:
+    radial-gradient(circle at 3px 3px, var(--primary-seed) 2.5px, transparent 3px),
+    radial-gradient(circle at 11px 3px, var(--secondary) 2.5px, transparent 3px);
 }
 
 .sidebar-header-actions {
@@ -151,10 +261,10 @@ body {
   overflow-x: hidden;
   padding: 6px 0;
   scrollbar-width: thin;
-  scrollbar-color: var(--sidebar-active) transparent;
+  scrollbar-color: var(--border) transparent;
 }
 #file-tree::-webkit-scrollbar { width: 4px; }
-#file-tree::-webkit-scrollbar-thumb { background: var(--sidebar-active); border-radius: 2px; }
+#file-tree::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
 .tree-loading {
   padding: 16px;
@@ -187,6 +297,7 @@ body {
 .tree-item.active {
   background: var(--sidebar-active);
   color: var(--sidebar-active-text);
+  box-shadow: inset 3px 0 0 var(--primary-seed);
 }
 
 .tree-item .icon {
@@ -221,7 +332,7 @@ body {
 .resize-handle {
   width: 4px;
   cursor: col-resize;
-  background: transparent;
+  background: var(--pane-divider);
   flex-shrink: 0;
   position: relative;
   z-index: 10;
@@ -229,7 +340,7 @@ body {
 }
 .resize-handle:hover,
 .resize-handle.active {
-  background: var(--primary);
+  background: var(--secondary-fill);
 }
 .resize-handle.hidden {
   display: none;
@@ -253,20 +364,87 @@ body {
 
 /* ---- Dockview theme overrides ---- */
 
-.dockview-theme-entaina {
-  --dv-background-color: var(--background);
-  --dv-paneview-header-border-color: var(--border);
-  --dv-tabs-and-actions-container-background-color: var(--surface);
-  --dv-activegroup-visiblepanel-tab-background-color: var(--surface);
-  --dv-activegroup-hiddenpanel-tab-background-color: var(--surface-alt);
-  --dv-inactivegroup-visiblepanel-tab-background-color: var(--surface-alt);
-  --dv-inactivegroup-hiddenpanel-tab-background-color: var(--surface-alt);
-  --dv-tab-divider-color: var(--border);
-  --dv-activegroup-visiblepanel-tab-color: var(--text);
-  --dv-activegroup-hiddenpanel-tab-color: var(--text-subtle);
-  --dv-separator-border: var(--border);
-  --dv-drag-over-background-color: color-mix(in oklch, var(--primary), transparent 80%);
-  --dv-drag-over-border-color: var(--primary);
+/* Tabs container: cabecera Innovation clarita (copperfield-50).
+   Usamos !important porque dockview-core@5 clona cssRules a <style> tags
+   en runtime y puede ganar en cascada a las variables de :root. Esta es
+   la única vía fiable de forzar el look. */
+.dockview-theme-entaina .dv-tabs-and-actions-container,
+body .dockview-theme-entaina .dv-tabs-and-actions-container {
+  background-color: var(--primary-soft) !important;
+  border-bottom: 1px solid var(--on-light);
+  padding-top: 4px;
+  padding-left: 6px;
+}
+
+/* Pestañas individuales: fondo Innovation con borde on-light para
+   dar forma de "tab". Inactivas en copperfield-100 (base), activa
+   en copperfield-200 (destaca por saturación, no por contraste de fondo). */
+.dockview-theme-entaina .dv-tab,
+.dockview-theme-entaina .dv-groupview.dv-active-group
+  > .dv-tabs-and-actions-container .dv-tabs-container
+  > .dv-tab,
+.dockview-theme-entaina .dv-groupview.dv-inactive-group
+  > .dv-tabs-and-actions-container .dv-tabs-container
+  > .dv-tab {
+  background-color: var(--primary-light) !important;
+  color: var(--text-muted) !important;
+  border: 1px solid var(--on-light);
+  border-bottom: none;
+  border-radius: 5px 5px 0 0;
+  margin-right: 2px;
+  margin-bottom: -1px; /* solapa el border-bottom del container */
+  transition: background-color 0.12s, color 0.12s;
+}
+
+.dockview-theme-entaina .dv-groupview.dv-active-group
+  > .dv-tabs-and-actions-container .dv-tabs-container
+  > .dv-tab.dv-active-tab,
+.dockview-theme-entaina .dv-groupview.dv-inactive-group
+  > .dv-tabs-and-actions-container .dv-tabs-container
+  > .dv-tab.dv-active-tab {
+  background-color: var(--copperfield-200) !important;
+  color: var(--text) !important;
+}
+
+/* Sashes dinámicos entre grupos de paneles (cuando divides la vista).
+   Dockview da al sash 4px de área de arrastre; pintamos solo una
+   línea de 1px en el centro con un ::before, dejando el resto
+   transparente. Así se preserva la ergonomía del drag handle y el
+   divisor visual queda fino. */
+.dockview-theme-entaina .dv-sash {
+  background: transparent !important;
+  position: relative;
+}
+
+/* Splits horizontales (paneles lado a lado) → línea vertical de 1px */
+.dockview-theme-entaina .dv-horizontal > .dv-sash-container > .dv-sash::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  margin-left: -0.5px;
+  background: var(--chicago-300);
+  transition: background 0.12s;
+}
+
+/* Splits verticales (paneles apilados) → línea horizontal de 1px */
+.dockview-theme-entaina .dv-vertical > .dv-sash-container > .dv-sash::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  margin-top: -0.5px;
+  background: var(--chicago-300);
+  transition: background 0.12s;
+}
+
+.dockview-theme-entaina .dv-sash:not(.dv-disabled):hover::before,
+.dockview-theme-entaina .dv-sash:not(.dv-disabled):active::before {
+  background: var(--chicago-500);
 }
 
 /* ---- Per-panel editor ---- */
@@ -353,6 +531,7 @@ body {
 
 .panel-tui-editor {
   flex: 1;
+  min-width: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -384,18 +563,18 @@ body {
 
 .panel-tui-editor .toastui-editor-md-container .toastui-editor,
 .panel-tui-editor .toastui-editor-md-container .ProseMirror {
-  max-width: 750px;
-  margin: 0 auto;
+  max-width: none;
+  width: 100%;
   padding: 32px 48px;
   font-size: 1.125rem;
   line-height: 1.75;
 }
 
 
-/* Toolbar */
+/* Toolbar — ocupa el ancho del panel */
 .panel-tui-editor .toastui-editor-toolbar {
-  max-width: 750px;
-  margin: 0 auto;
+  max-width: none;
+  width: 100%;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   padding: 4px 8px;
@@ -410,14 +589,34 @@ body {
   color: var(--primary-dark);
 }
 
-/* WYSIWYG content area */
+/* WYSIWYG content area — ocupa el ancho del panel */
 .panel-tui-editor .toastui-editor-contents {
-  max-width: 750px;
-  margin: 0 auto;
+  max-width: none;
+  width: 100%;
   padding: 32px 48px;
   background: var(--background);
   font-size: 1.125rem;
   line-height: 1.75;
+}
+
+/* Bloques anchos (código, tablas, imágenes) — scroll horizontal propio
+   cuando el panel es más estrecho que el contenido. El texto envuelve
+   al ancho del panel; solo estos elementos se desbordan y scrollean. */
+.panel-tui-editor .toastui-editor-contents pre,
+.panel-tui-editor .ProseMirror pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.panel-tui-editor .toastui-editor-contents table,
+.panel-tui-editor .ProseMirror table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.panel-tui-editor .toastui-editor-contents img,
+.panel-tui-editor .ProseMirror img {
+  max-width: 100%;
+  height: auto;
 }
 
 /* Heading sizes — compact for document editing */
@@ -461,7 +660,7 @@ body {
 }
 
 .cv-tab-dirty {
-  color: var(--golden-tainoi-200);
+  color: var(--primary-seed);
   font-size: 9px;
   flex-shrink: 0;
 }
@@ -500,9 +699,9 @@ body {
 .welcome-inner h1 {
   font-family: var(--font-display, 'Space Grotesk', sans-serif);
   font-size: 24px;
-  font-weight: 600;
+  font-weight: 500;
   margin-bottom: 8px;
-  opacity: 0.5;
+  color: var(--primary-seed);
 }
 .welcome-inner p { font-size: 14px; opacity: 0.7; }
 
@@ -724,21 +923,21 @@ body {
   width: 13px;
   height: 13px;
 }
-.history-item-badge.type-add { color: #0d7b3e; }
-.history-item-badge.type-move { color: #3b5870; }
-.history-item-badge.type-move-edit { color: #3b5870; }
+.history-item-badge.type-add { color: var(--success-dark); }
+.history-item-badge.type-move { color: var(--accent-dark); }
+.history-item-badge.type-move-edit { color: var(--accent-dark); }
 .history-item-badge.type-move-edit svg + svg { margin-left: 2px; color: var(--text-subtle); }
-.history-item-badge.type-copy { color: #6b859f; }
+.history-item-badge.type-copy { color: var(--accent); }
 .history-item-badge.type-edit { color: var(--text-subtle); }
-.history-item-badge.type-uncommitted { color: #b45309; }
+.history-item-badge.type-uncommitted { color: var(--warning-dark); }
 
 .history-timeline-item.uncommitted .history-item-dot {
-  background: #f59e0b;
-  box-shadow: 0 0 0 1px #f59e0b;
+  background: var(--warning);
+  box-shadow: 0 0 0 1px var(--warning);
 }
 .history-timeline-item.uncommitted.active {
   background: var(--surface-alt);
-  border-left-color: #f59e0b;
+  border-left-color: var(--warning);
 }
 
 /* ---- Banners above the diff ---- */
@@ -771,28 +970,28 @@ body {
   line-height: 1.8;
 }
 .history-banner-created {
-  background: #eaf7ed;
-  border-left-color: #34a853;
-  color: #0d652d;
+  background: var(--success-light);
+  border-left-color: var(--success);
+  color: var(--success-dark);
 }
 .history-banner-moved {
-  background: #eef3f8;
-  border-left-color: #6b859f;
-  color: #3b5870;
+  background: var(--accent-soft);
+  border-left-color: var(--accent);
+  color: var(--accent-dark);
 }
 .history-banner-uncommitted {
-  background: #fef3c7;
-  border-left-color: #f59e0b;
-  color: #78350f;
+  background: var(--warning-light);
+  border-left-color: var(--warning);
+  color: var(--warning-dark);
 }
 .history-banner-uncommitted code {
   background: rgba(120, 53, 15, 0.12);
   color: inherit;
 }
 .history-banner-unchanged {
-  background: #e8f5ee;
-  border-left-color: #34a853;
-  color: #0d652d;
+  background: var(--success-light);
+  border-left-color: var(--success);
+  color: var(--success-dark);
 }
 
 .history-timeline-item {
@@ -809,7 +1008,7 @@ body {
 }
 .history-timeline-item.active {
   background: var(--surface-alt);
-  border-left-color: var(--copperfield, #de865c);
+  border-left-color: var(--secondary-fill);
 }
 .history-item-dot {
   width: 10px;
@@ -822,19 +1021,19 @@ body {
   box-shadow: 0 0 0 1px var(--border);
 }
 .history-timeline-item.active .history-item-dot {
-  background: var(--copperfield, #de865c);
-  box-shadow: 0 0 0 1px var(--copperfield, #de865c);
+  background: var(--secondary-fill);
+  box-shadow: 0 0 0 1px var(--secondary-fill);
 }
 
 /* The latest commit gets merged with "Versión actual" when the working tree
    is clean — green dot + green active border + inline pill in the title. */
 .history-timeline-item.head-current .history-item-dot {
-  background: #34a853;
-  box-shadow: 0 0 0 1px #34a853;
+  background: var(--success);
+  box-shadow: 0 0 0 1px var(--success);
 }
 .history-timeline-item.head-current.active {
   background: var(--surface-alt);
-  border-left-color: #34a853;
+  border-left-color: var(--success);
 }
 .history-current-tag {
   display: inline-block;
@@ -842,8 +1041,8 @@ body {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #0d7b3e;
-  background: #e8f5ee;
+  color: var(--success-dark);
+  background: var(--success-light);
   padding: 1px 6px;
   border-radius: 3px;
   margin-right: 6px;
@@ -923,15 +1122,15 @@ body {
   font-weight: 600;
   padding: 5px 14px;
   border-radius: 6px;
-  border: 1px solid var(--copperfield, #de865c);
+  border: 1px solid var(--secondary-fill);
   background: var(--surface);
-  color: var(--copperfield, #de865c);
+  color: var(--secondary-dark);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
 .history-restore-btn:hover {
-  background: var(--copperfield, #de865c);
-  color: white;
+  background: var(--secondary);
+  color: var(--on-secondary);
 }
 
 .history-diff-container {
@@ -992,7 +1191,7 @@ body {
   color: var(--text-subtle);
   margin: 0 0 14px;
 }
-.history-doc-view a { color: var(--hoki, #6b859f); }
+.history-doc-view a { color: var(--primary); }
 .history-doc-view img { max-width: 100%; height: auto; }
 .history-doc-view table {
   border-collapse: collapse;
@@ -1015,20 +1214,20 @@ body {
 .history-doc-view ins,
 .history-doc-view ins.diffins,
 .history-doc-view ins.mod {
-  background: #d7f5df;
-  color: #0d652d;
+  background: var(--success-light);
+  color: var(--success-dark);
   text-decoration: underline;
-  text-decoration-color: #34a853;
+  text-decoration-color: var(--success);
   padding: 0 2px;
   border-radius: 2px;
 }
 .history-doc-view del,
 .history-doc-view del.diffdel,
 .history-doc-view del.mod {
-  background: #fde0e3;
-  color: #b42318;
+  background: var(--danger-light);
+  color: var(--danger-dark);
   text-decoration: line-through;
-  text-decoration-color: #b42318;
+  text-decoration-color: var(--danger-dark);
   padding: 0 2px;
   border-radius: 2px;
 }
@@ -1043,9 +1242,9 @@ body {
 .history-doc-view ins > blockquote,
 .history-doc-view ins > pre {
   display: block;
-  border-left: 3px solid #34a853;
+  border-left: 3px solid var(--success);
   padding: 4px 10px;
-  background: #eaf7ed;
+  background: var(--success-light);
   border-radius: 4px;
   margin: 6px 0;
 }
@@ -1058,14 +1257,14 @@ body {
 .history-doc-view del > blockquote,
 .history-doc-view del > pre {
   display: block;
-  border-left: 3px solid #d93025;
+  border-left: 3px solid var(--danger);
   padding: 4px 10px;
-  background: #fbebed;
+  background: var(--danger-light);
   border-radius: 4px;
   margin: 6px 0;
   opacity: 0.9;
 }
 
 /* Images inside ins/del — htmldiff-js wraps the whole img */
-.history-doc-view ins img { outline: 2px solid #34a853; }
-.history-doc-view del img { outline: 2px solid #d93025; opacity: 0.7; }
+.history-doc-view ins img { outline: 2px solid var(--success); }
+.history-doc-view del img { outline: 2px solid var(--danger); opacity: 0.7; }

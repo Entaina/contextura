@@ -13,7 +13,7 @@
  * still load the ESM `server.mjs` via `await import()`.
  */
 
-const { app, BrowserWindow, dialog, Menu, ipcMain, shell } = require('electron')
+const { app, BrowserWindow, dialog, Menu, ipcMain, nativeTheme, shell } = require('electron')
 const { basename, join } = require('node:path')
 const { existsSync, statSync } = require('node:fs')
 
@@ -27,6 +27,11 @@ let serverHandle = null
 let startServer = null // lazy-loaded from ESM ../server.mjs
 
 app.setName('Contextura')
+
+// Contextura siempre en light mode (tema "hoja de papel"); ignoramos el
+// modo oscuro del sistema para que la titlebar y el chrome nativo no
+// rompan la composición del tema propio.
+nativeTheme.themeSource = 'light'
 
 async function loadStartServer () {
   if (startServer) return startServer
@@ -227,7 +232,7 @@ function createWindow (url) {
     minWidth: 900,
     minHeight: 600,
     title: 'Contextura',
-    backgroundColor: '#1f2937',
+    backgroundColor: '#ffffff', // matching --background del tema propio
     webPreferences: {
       preload: PRELOAD_PATH,
       contextIsolation: true,

@@ -102,6 +102,8 @@
 
   --sidebar-width:  280px;
   --header-height:  44px;
+  --titlebar-height: 30px;
+  --traffic-lights-inset: 78px;
 
   /* ---- Dockview theme vars (a nivel :root para que hereden siempre) ---- */
   --dv-group-view-background-color: var(--background);
@@ -137,7 +139,52 @@ html, body {
 
 body {
   display: flex;
+  flex-direction: column;
   height: 100vh;
+}
+
+/* ---- Titlebar (drag region — merges visually with native macOS chrome) ---- */
+
+#titlebar {
+  height: var(--titlebar-height);
+  flex-shrink: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 8px;
+  -webkit-app-region: drag;
+}
+body.platform-darwin #titlebar {
+  padding-left: var(--traffic-lights-inset);
+}
+
+.titlebar-actions {
+  display: flex;
+  gap: 2px;
+  -webkit-app-region: no-drag;
+}
+
+.titlebar-actions .icon-btn {
+  color: var(--text-subtle);
+  padding: 4px 6px;
+}
+.titlebar-actions .icon-btn:hover {
+  color: var(--text);
+  background: var(--surface-alt);
+}
+.titlebar-actions .icon-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* ---- App body (horizontal layout: sidebar | main | context-pane) ---- */
+
+#app-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* ---- Sidebar ---- */
@@ -163,47 +210,13 @@ body {
   pointer-events: none;
 }
 
-.sidebar-header {
+.sidebar-toolbar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 10px;
-  height: var(--header-height);
+  justify-content: flex-end;
+  gap: 2px;
+  padding: 4px 8px;
   border-bottom: 1px solid var(--sidebar-border);
   flex-shrink: 0;
-  gap: 4px;
-}
-
-.sidebar-logo {
-  font-family: var(--font-display, 'Space Grotesk', sans-serif);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--sidebar-text);
-  opacity: 0.9;
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-/* Micro-isotipo: dos semillas visibles (copperfield + golden-tainoi).
-   La sidebar ya ES hoki, así que el tercer pilar lo aporta el fondo
-   — los tres pilares siempre presentes, dos como puntos y uno como
-   superficie. */
-.sidebar-logo::before {
-  content: '';
-  display: inline-block;
-  width: 14px;
-  height: 6px;
-  flex-shrink: 0;
-  background:
-    radial-gradient(circle at 3px 3px, var(--primary-seed) 2.5px, transparent 3px),
-    radial-gradient(circle at 11px 3px, var(--secondary) 2.5px, transparent 3px);
-}
-
-.sidebar-header-actions {
-  display: flex;
-  gap: 2px;
 }
 
 .icon-btn {
@@ -231,6 +244,8 @@ body {
   color: var(--sidebar-text);
   background: var(--sidebar-hover);
 }
+.icon-btn[aria-pressed="false"] { opacity: 0.55; }
+.icon-btn svg { width: 16px; height: 16px; }
 
 .sidebar-search {
   padding: 8px 10px;
@@ -362,23 +377,186 @@ body {
   overflow: hidden;
 }
 
+/* ---- Context pane (right side, per-file contextual modules) ---- */
+
+#context-pane {
+  width: 320px;
+  min-width: 220px;
+  max-width: 50vw;
+  background: var(--surface);
+  color: var(--text);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: width 0.15s ease, min-width 0.15s ease, opacity 0.15s ease;
+}
+
+#context-pane.collapsed {
+  width: 0 !important;
+  min-width: 0 !important;
+  border-left: 0 !important;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#context-pane-body {
+  flex: 1;
+  overflow: auto;
+  padding: 12px;
+}
+
+.context-empty {
+  color: var(--text-subtle);
+  font-size: 12px;
+  text-align: center;
+  padding: 24px 8px;
+}
+
+/* ---- Context history timeline (right pane module) ---- */
+
+.context-history {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.context-history-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: relative;
+  padding-left: 14px;
+}
+
+.context-history-timeline::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: var(--border);
+}
+
+.context-history-empty {
+  color: var(--text-subtle);
+  font-size: 12px;
+  padding: 12px 4px;
+  text-align: center;
+}
+.context-history-empty strong { display: block; color: var(--text); margin-bottom: 4px; }
+.context-history-empty p { font-size: 11px; margin-top: 4px; }
+
+.context-history-item {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  padding: 8px 8px 8px 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.12s;
+}
+.context-history-item:hover { background: var(--surface-alt); }
+.context-history-item.active {
+  background: var(--secondary-soft);
+  outline: 1px solid var(--secondary);
+}
+
+.context-history-dot {
+  position: absolute;
+  left: -12px;
+  top: 12px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--secondary-fill);
+  border: 2px solid var(--background);
+  box-sizing: content-box;
+}
+.context-history-item.uncommitted .context-history-dot { background: var(--warning); }
+.context-history-item.head-current .context-history-dot { background: var(--primary); }
+
+.context-history-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.context-history-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-subtle);
+}
+.context-history-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.context-history-badge svg { width: 14px; height: 14px; }
+.context-history-badge.type-uncommitted { color: var(--warning-dark); }
+
+.context-history-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+}
+.context-history-current-tag {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--success-dark);
+  background: var(--success-light);
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.context-history-item.head-current .context-history-dot { background: var(--success); }
+
+.context-history-author {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.context-history-subject {
+  font-size: 12px;
+  color: var(--text);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.35;
+}
+
 /* ---- Dockview theme overrides ---- */
 
 /* Tabs container: cabecera Innovation clarita (copperfield-50).
    Usamos !important porque dockview-core@5 clona cssRules a <style> tags
-   en runtime y puede ganar en cascada a las variables de :root. Esta es
-   la única vía fiable de forzar el look. */
+   en runtime y puede ganar en cascada a las variables de :root. */
 .dockview-theme-entaina .dv-tabs-and-actions-container,
 body .dockview-theme-entaina .dv-tabs-and-actions-container {
   background-color: var(--primary-soft) !important;
-  border-bottom: 1px solid var(--on-light);
-  padding-top: 4px;
-  padding-left: 6px;
+  border-bottom: 1px solid var(--border);
+  padding: 4px 6px 0;
 }
 
-/* Pestañas individuales: fondo Innovation con borde on-light para
-   dar forma de "tab". Inactivas en copperfield-100 (base), activa
-   en copperfield-200 (destaca por saturación, no por contraste de fondo). */
+/* Pestañas inactivas: mismo folder-tab look que la activa pero
+   apagado — fondo --surface (casi blanco con tinte gris) en lugar
+   del blanco puro, texto --text-subtle. Se leen como "estoy abierta
+   pero no soy la que estás viendo ahora". */
 .dockview-theme-entaina .dv-tab,
 .dockview-theme-entaina .dv-groupview.dv-active-group
   > .dv-tabs-and-actions-container .dv-tabs-container
@@ -386,23 +564,55 @@ body .dockview-theme-entaina .dv-tabs-and-actions-container {
 .dockview-theme-entaina .dv-groupview.dv-inactive-group
   > .dv-tabs-and-actions-container .dv-tabs-container
   > .dv-tab {
-  background-color: var(--primary-light) !important;
-  color: var(--text-muted) !important;
-  border: 1px solid var(--on-light);
+  background-color: var(--surface) !important;
+  color: var(--chicago-400) !important;
+  border: 1px solid var(--border);
   border-bottom: none;
-  border-radius: 5px 5px 0 0;
+  border-radius: 6px 6px 0 0;
   margin-right: 2px;
   margin-bottom: -1px; /* solapa el border-bottom del container */
+  padding: 0 14px;
+  font-weight: 400;
   transition: background-color 0.12s, color 0.12s;
 }
+.dockview-theme-entaina .dv-tab:hover {
+  background-color: var(--surface-alt) !important;
+  color: var(--text) !important;
+}
+/* Dockview-core inyecta en runtime una regla `.dv-tab:focus::after` /
+   `.dv-tab:focus-within::after { outline: 1px solid ... !important }`
+   que pinta un borde rectangular sobre el pseudo-elemento del tab al
+   recibir foco — no respeta el border-radius del folder tab y queda
+   feo. La neutralizamos atacando específicamente el pseudo. */
+body .dockview-theme-entaina .dv-tab::after,
+body .dockview-theme-entaina .dv-tab:focus::after,
+body .dockview-theme-entaina .dv-tab:focus-within::after,
+body .dockview-theme-entaina .dv-tab:focus-visible::after {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
 
+/* Pestaña activa del grupo: fondo blanco puro + texto oscuro +
+   font-weight 500. Salta a la vista sobre las inactivas copperfield-100
+   y se funde con el fondo del editor por debajo (margin-bottom -1px). */
 .dockview-theme-entaina .dv-groupview.dv-active-group
   > .dv-tabs-and-actions-container .dv-tabs-container
   > .dv-tab.dv-active-tab,
 .dockview-theme-entaina .dv-groupview.dv-inactive-group
   > .dv-tabs-and-actions-container .dv-tabs-container
   > .dv-tab.dv-active-tab {
-  background-color: var(--copperfield-200) !important;
+  background-color: var(--background) !important;
+  color: var(--text) !important;
+  font-weight: 500 !important;
+}
+.dockview-theme-entaina .dv-groupview.dv-active-group
+  > .dv-tabs-and-actions-container .dv-tabs-container
+  > .dv-tab.dv-active-tab:hover,
+.dockview-theme-entaina .dv-groupview.dv-inactive-group
+  > .dv-tabs-and-actions-container .dv-tabs-container
+  > .dv-tab.dv-active-tab:hover {
+  background-color: var(--background) !important;
   color: var(--text) !important;
 }
 
@@ -795,32 +1005,6 @@ body .dockview-theme-entaina .dv-tabs-and-actions-container {
 }
 .draft-input::placeholder { color: var(--sidebar-muted); opacity: 0.7; }
 
-/* ---- Show sidebar button (when collapsed) ---- */
-
-.sidebar-show-btn {
-  position: fixed;
-  top: 8px;
-  left: 8px;
-  z-index: 100;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text-subtle);
-  cursor: pointer;
-  padding: 6px 8px;
-  border-radius: 6px;
-  font-size: 14px;
-  line-height: 1;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.15s, background 0.15s;
-}
-.sidebar-show-btn:hover {
-  color: var(--text);
-  background: var(--surface-alt);
-}
-.sidebar-show-btn.visible { display: inline-flex; }
-
 /* Drag and Drop */
 .tree-item.file[draggable="true"] { cursor: grab; }
 .tree-item.dragging { opacity: 0.4; }
@@ -844,63 +1028,16 @@ body .dockview-theme-entaina .dv-tabs-and-actions-container {
    History panel (version viewer + diff)
    ============================================================ */
 
-.history-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 26px;
-  padding: 0;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-subtle);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-.history-btn:hover {
-  background: var(--surface-alt);
-  color: var(--text);
-}
-.history-btn i,
-.history-btn svg {
-  width: 16px;
-  height: 16px;
-}
-
-.history-panel {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background: var(--background);
-}
-
-/* ---- History view (embedded mode inside EditorPanelRenderer) ---- */
-.history-view {
+/* ---- Diff view (embedded mode inside EditorPanelRenderer) ---- */
+.diff-view {
   flex: 1;
   min-height: 0;
   display: none;
   flex-direction: column;
   background: var(--background);
 }
-.editor-panel.mode-history .panel-tui-editor { display: none; }
-.editor-panel.mode-history .history-view { display: flex; }
-
-.history-body {
-  flex: 1;
-  display: flex;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.history-timeline {
-  width: 260px;
-  flex-shrink: 0;
-  border-right: 1px solid var(--border);
-  background: var(--surface);
-  overflow-y: auto;
-  padding: 8px 0;
-}
+.editor-panel.mode-diff .panel-tui-editor { display: none; }
+.editor-panel.mode-diff .diff-view { display: flex; }
 
 .history-empty {
   padding: 24px 16px;
@@ -934,39 +1071,13 @@ body .dockview-theme-entaina .dv-tabs-and-actions-container {
   margin: 2px 0 !important;
 }
 
-/* ---- Timeline type badges ---- */
-.history-item-title-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.history-item-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: var(--text-subtle);
-}
-.history-item-badge svg {
-  width: 13px;
-  height: 13px;
-}
-.history-item-badge.type-add { color: var(--success-dark); }
-.history-item-badge.type-move { color: var(--accent-dark); }
-.history-item-badge.type-move-edit { color: var(--accent-dark); }
-.history-item-badge.type-move-edit svg + svg { margin-left: 2px; color: var(--text-subtle); }
-.history-item-badge.type-copy { color: var(--accent); }
-.history-item-badge.type-edit { color: var(--text-subtle); }
-.history-item-badge.type-uncommitted { color: var(--warning-dark); }
-
-.history-timeline-item.uncommitted .history-item-dot {
-  background: var(--warning);
-  box-shadow: 0 0 0 1px var(--warning);
-}
-.history-timeline-item.uncommitted.active {
-  background: var(--surface-alt);
-  border-left-color: var(--warning);
-}
+/* ---- Timeline type badges (context pane history items) ---- */
+.context-history-badge.type-add { color: var(--success-dark); }
+.context-history-badge.type-move { color: var(--accent-dark); }
+.context-history-badge.type-move-edit { color: var(--accent-dark); }
+.context-history-badge.type-move-edit svg + svg { margin-left: 2px; color: var(--text-subtle); }
+.context-history-badge.type-copy { color: var(--accent); }
+.context-history-badge.type-edit { color: var(--text-subtle); }
 
 /* ---- Banners above the diff ---- */
 .history-banner {
@@ -1020,93 +1131,6 @@ body .dockview-theme-entaina .dv-tabs-and-actions-container {
   background: var(--success-light);
   border-left-color: var(--success);
   color: var(--success-dark);
-}
-
-.history-timeline-item {
-  position: relative;
-  display: flex;
-  gap: 10px;
-  padding: 10px 16px 10px 14px;
-  cursor: pointer;
-  border-left: 3px solid transparent;
-  transition: background 0.12s, border-color 0.12s;
-}
-.history-timeline-item:hover {
-  background: var(--surface-alt);
-}
-.history-timeline-item.active {
-  background: var(--surface-alt);
-  border-left-color: var(--secondary-fill);
-}
-.history-item-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--border);
-  margin-top: 5px;
-  flex-shrink: 0;
-  border: 2px solid var(--surface);
-  box-shadow: 0 0 0 1px var(--border);
-}
-.history-timeline-item.active .history-item-dot {
-  background: var(--secondary-fill);
-  box-shadow: 0 0 0 1px var(--secondary-fill);
-}
-
-/* The latest commit gets merged with "Versión actual" when the working tree
-   is clean — green dot + green active border + inline pill in the title. */
-.history-timeline-item.head-current .history-item-dot {
-  background: var(--success);
-  box-shadow: 0 0 0 1px var(--success);
-}
-.history-timeline-item.head-current.active {
-  background: var(--surface-alt);
-  border-left-color: var(--success);
-}
-.history-current-tag {
-  display: inline-block;
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--success-dark);
-  background: var(--success-light);
-  padding: 1px 6px;
-  border-radius: 3px;
-  margin-right: 6px;
-  vertical-align: middle;
-}
-
-.history-item-body {
-  flex: 1;
-  min-width: 0;
-}
-.history-item-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
-  line-height: 1.3;
-}
-.history-item-author {
-  font-size: 11px;
-  color: var(--text-subtle);
-  margin-top: 2px;
-}
-.history-item-meta {
-  font-size: 11px;
-  color: var(--text-subtle);
-  font-style: italic;
-  margin-top: 2px;
-}
-.history-item-subject {
-  font-size: 11px;
-  color: var(--text-subtle);
-  margin-top: 4px;
-  line-height: 1.35;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
 }
 
 .history-diff {

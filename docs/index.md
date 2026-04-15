@@ -39,7 +39,7 @@ Para navegar empieza por la tabla de dominios más abajo y usa los criterios de 
   - Leer al crear o editar ficheros en `electron/`
   - Leer al investigar problemas de arranque o integración macOS
 
-- [historial.md](historial.md): Implementación técnica del historial — [lib/git-history.mjs](../lib/git-history.mjs) y el `HistoryView` del frontend
+- [historial.md](historial.md): Implementación técnica del historial — [lib/git-history.mjs](../lib/git-history.mjs), el `HistoryModule` del pane contextual y el `DiffView` del frontend
   - Leer al tocar la implementación del historial (la experiencia del usuario vive en [features/historial/](features/historial/index.md))
 
 - [design-system.md](design-system.md): Integración con el Entaina Design System vía CDN

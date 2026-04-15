@@ -7,8 +7,9 @@
  * @param {Object} handlers
  * @param {() => void} handlers.save Cmd/Ctrl+S.
  * @param {() => void} handlers.toggleSidebar Cmd/Ctrl+B.
+ * @param {() => void} handlers.toggleContextPane Cmd/Ctrl+Alt+B.
  */
-export function initKeybindings ({ save, toggleSidebar }) {
+export function initKeybindings ({ save, toggleSidebar, toggleContextPane }) {
   document.addEventListener('keydown', (e) => {
     if (!(e.metaKey || e.ctrlKey)) return
     if (e.key === 's') {
@@ -16,7 +17,8 @@ export function initKeybindings ({ save, toggleSidebar }) {
       save()
     } else if (e.key === 'b') {
       e.preventDefault()
-      toggleSidebar()
+      if (e.altKey) toggleContextPane()
+      else toggleSidebar()
     }
   })
 }

@@ -24,6 +24,8 @@ import {
   refreshTree,
 } from './js/ui/tree.js'
 import { initSidebar, toggleSidebar } from './js/ui/sidebar.js'
+import { initContextPane, toggleContextPane } from './js/ui/context-pane/context-pane.js'
+import { initContextHost, setActiveFile, invalidateHistory } from './js/ui/context-pane/context-host.js'
 import { initKeybindings } from './js/ui/keybindings.js'
 
 const searchInput = document.getElementById('search-input')
@@ -32,9 +34,20 @@ const btnNewFile = document.getElementById('btn-new-file')
 async function init () {
   treeStore.set(await api.getTree())
 
-  const dv = initDockview()
+  const dv = initDockview({
+    onActivePanelChange: (id) => setActiveFile(id),
+  })
+
+  initContextHost({
+    onVersionSelect: (path, version, ctx) => {
+      const active = dv.dockview?.activePanel
+      if (!active || active.id !== path) return
+      panelStore.get(active.id)?.renderer?.showDiffVersion(version, ctx)
+    },
+  })
 
   initSidebar({ onLayoutChange: dv.layoutDockview })
+  initContextPane({ onLayoutChange: dv.layoutDockview })
 
   configureTree({
     openFile: dv.openFile,
@@ -44,7 +57,7 @@ async function init () {
   renderTree(treeStore.get())
   refreshIcons()
 
-  initKeybindings({ save: dv.saveActiveFile, toggleSidebar })
+  initKeybindings({ save: dv.saveActiveFile, toggleSidebar, toggleContextPane })
 
   dv.restoreLayoutOrLastFile()
 
@@ -60,7 +73,7 @@ async function onServerFileChange (data) {
   for (const s of panelStore.values()) {
     if (!data.path.endsWith(s.path) || s.isDirty) continue
     if (!s.renderer.consumeJustSaved()) s.renderer.loadContent()
-    s.renderer.invalidateHistory()
+    invalidateHistory(s.path)
   }
 }
 
@@ -68,13 +81,9 @@ function buildMenuHandlers (dv) {
   return {
     'new-file': () => btnNewFile?.click(),
     'toggle-sidebar': toggleSidebar,
+    'toggle-context-pane': toggleContextPane,
     save: dv.saveActiveFile,
     'close-tab': dv.closeActivePanel,
-    'toggle-history': () => {
-      const active = dv.dockview?.activePanel
-      if (!active) return
-      panelStore.get(active.id)?.renderer?.toggleHistory()
-    },
   }
 }
 

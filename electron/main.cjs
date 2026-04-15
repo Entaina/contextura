@@ -172,9 +172,9 @@ function buildMenu () {
           click: () => sendAction('toggle-sidebar'),
         },
         {
-          label: 'Toggle History',
-          accelerator: 'CmdOrCtrl+H',
-          click: () => sendAction('toggle-history'),
+          label: 'Toggle Context Pane',
+          accelerator: 'CmdOrCtrl+Alt+B',
+          click: () => sendAction('toggle-context-pane'),
         },
         { type: 'separator' },
         { role: 'reload' },
@@ -233,6 +233,10 @@ function createWindow (url) {
     minHeight: 600,
     title: 'Contextura',
     backgroundColor: '#ffffff', // matching --background del tema propio
+    ...(process.platform === 'darwin' && {
+      titleBarStyle: 'hiddenInset',
+      trafficLightPosition: { x: 12, y: 10 },
+    }),
     webPreferences: {
       preload: PRELOAD_PATH,
       contextIsolation: true,

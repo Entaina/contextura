@@ -35,37 +35,52 @@
 </head>
 <body>
 
-  <!-- Sidebar -->
-  <aside id="sidebar">
-    <div class="sidebar-header">
-      <span class="sidebar-logo">Contextura</span>
-      <div class="sidebar-header-actions">
-        <button id="btn-new-file"   title="Nuevo archivo (en contexto actual)" class="icon-btn"><i data-lucide="file-plus"></i></button>
-        <button id="btn-new-folder" title="Nueva carpeta (en contexto actual)" class="icon-btn"><i data-lucide="folder-plus"></i></button>
-        <button id="btn-collapse-all" title="Colapsar todo" class="icon-btn"><i data-lucide="list-collapse"></i></button>
-        <button id="btn-toggle-sidebar" title="Ocultar sidebar (⌘B)" class="icon-btn"><i data-lucide="panel-left-close"></i></button>
+  <!-- Titlebar drag region: transparent, merges with native macOS titlebar -->
+  <div id="titlebar" aria-hidden="true">
+    <div class="titlebar-actions">
+      <button id="btn-toggle-sidebar" class="icon-btn" aria-pressed="true" title="Sidebar (⌘B)">
+        <i data-lucide="panel-left"></i>
+      </button>
+      <button id="btn-toggle-context-pane" class="icon-btn" aria-pressed="true" title="Contexto (⌘⌥B)">
+        <i data-lucide="panel-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <div id="app-body">
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="sidebar-search">
+        <input type="text" id="search-input" placeholder="Buscar..." autocomplete="off" />
       </div>
-    </div>
-    <div class="sidebar-search">
-      <input type="text" id="search-input" placeholder="Buscar..." autocomplete="off" />
-    </div>
-    <nav id="file-tree">
-      <div class="tree-loading">Cargando árbol…</div>
-    </nav>
-  </aside>
+      <div class="sidebar-toolbar">
+        <button id="btn-new-file"    title="Nuevo archivo (en contexto actual)" class="icon-btn"><i data-lucide="file-plus"></i></button>
+        <button id="btn-new-folder"  title="Nueva carpeta (en contexto actual)" class="icon-btn"><i data-lucide="folder-plus"></i></button>
+        <button id="btn-collapse-all" title="Colapsar todo" class="icon-btn"><i data-lucide="list-collapse"></i></button>
+      </div>
+      <nav id="file-tree">
+        <div class="tree-loading">Cargando árbol…</div>
+      </nav>
+    </aside>
 
-  <!-- Resize handle -->
-  <div id="resize-handle" class="resize-handle"></div>
+    <!-- Resize handle -->
+    <div id="resize-handle" class="resize-handle"></div>
 
-  <!-- Main viewer area (dockview tabs) -->
-  <main id="main" class="dockview-theme-entaina">
-    <div id="dockview-container"></div>
-  </main>
+    <!-- Main viewer area (dockview tabs) -->
+    <main id="main" class="dockview-theme-entaina">
+      <div id="dockview-container"></div>
+    </main>
 
-  <!-- Show sidebar button (visible when sidebar hidden) -->
-  <button id="sidebar-show-btn" class="sidebar-show-btn" title="Mostrar sidebar (⌘B)">
-    <i data-lucide="panel-left-open"></i>
-  </button>
+    <!-- Right resize handle (between main and context pane) -->
+    <div id="context-resize-handle" class="resize-handle resize-handle-right"></div>
+
+    <!-- Context pane: per-file contextual modules (history, etc.) -->
+    <aside id="context-pane">
+      <div id="context-pane-body">
+        <div class="context-empty">Selecciona un fichero</div>
+      </div>
+    </aside>
+  </div>
 
   <script src="/public/app.js" type="module"></script>
 </body>

@@ -50,6 +50,29 @@ export const sidebarVisible = {
 }
 
 /**
+ * Context pane width in pixels (right-side resize handle persistence).
+ */
+export const contextPaneWidth = {
+  /** @returns {number | null} */
+  get: () => {
+    const v = raw.get('context-pane-width')
+    return v == null ? null : Number(v)
+  },
+  /** @param {number} px */
+  set: (px) => raw.set('context-pane-width', String(px)),
+}
+
+/**
+ * Context pane visibility (`true` = visible, `false` = collapsed).
+ */
+export const contextPaneVisible = {
+  /** @returns {boolean} Defaults to `true` when unset. */
+  get: () => raw.get('context-pane-visible') !== '0',
+  /** @param {boolean} visible */
+  set: (visible) => raw.set('context-pane-visible', visible ? '1' : '0'),
+}
+
+/**
  * Per-file editor mode: 'wysiwyg' or 'markdown'.
  */
 export const editMode = {

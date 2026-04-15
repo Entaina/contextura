@@ -1,13 +1,16 @@
 /**
  * EditorPanelRenderer — Dockview component that hosts a Toast UI markdown
- * editor for a single file, plus the inline history view.
+ * editor for a single file, plus a diff viewer activated from the right
+ * context pane.
  *
  * Owns:
  * - The Toast UI editor lifecycle (create, reload, destroy).
  * - Dirty tracking against a normalized baseline captured right after the
  *   editor renders (Toast UI massages whitespace/dash styles on load, so the
  *   baseline must be the post-load markdown to avoid false positives).
- * - The switch between edit and history modes.
+ * - The switch between edit and diff modes. Diff selection happens in the
+ *   right context pane's history timeline and is pushed in via
+ *   `showDiffVersion(version, ctx)`.
  * - Save flow, including a short "just saved" window so the SSE watcher in
  *   `app.js` skips the reload that would otherwise be triggered by our own
  *   PUT.
@@ -18,7 +21,7 @@ import * as storage from '../../storage.js'
 import { panelStore } from '../../state/panel-store.js'
 import { lucideIcon } from '../../infra/dom.js'
 import { basename } from '../../domain/path.js'
-import { HistoryView } from '../history/history-view.js'
+import { DiffView } from '../history/diff-view.js'
 
 const SAVED_INDICATOR_MS = 2000
 const JUST_SAVED_WINDOW_MS = 3000
@@ -40,11 +43,6 @@ export class EditorPanelRenderer {
     this._indicator = document.createElement('span')
     this._indicator.className = 'save-indicator'
 
-    this._historyBtn = document.createElement('button')
-    this._historyBtn.className = 'history-btn'
-    this._historyBtn.title = 'Ver historial de versiones'
-    this._historyBtn.appendChild(lucideIcon('history'))
-
     this._backBtn = document.createElement('button')
     this._backBtn.className = 'back-btn hidden'
     this._backBtn.title = 'Volver al editor'
@@ -56,7 +54,6 @@ export class EditorPanelRenderer {
     this._saveBtn.textContent = 'Guardar'
 
     this._actions.appendChild(this._indicator)
-    this._actions.appendChild(this._historyBtn)
     this._actions.appendChild(this._saveBtn)
     this._actions.appendChild(this._backBtn)
     this._header.appendChild(this._breadcrumb)
@@ -72,9 +69,9 @@ export class EditorPanelRenderer {
     this._path = null
     this._editor = null
 
-    /** 'edit' | 'history' */
+    /** 'edit' | 'diff' */
     this._mode = 'edit'
-    this._historyView = null
+    this._diffView = null
   }
 
   init (params) {
@@ -83,57 +80,55 @@ export class EditorPanelRenderer {
     this._breadcrumb.textContent = this._path
 
     this._saveBtn.addEventListener('click', () => this.save())
-    this._historyBtn.addEventListener('click', () => this._enterHistoryMode())
-    this._backBtn.addEventListener('click', () => this._exitHistoryMode())
+    this._backBtn.addEventListener('click', () => this._exitDiffMode())
 
     this.loadContent()
   }
 
-  /** Public toggle for consumers outside the renderer (menu actions, etc). */
-  toggleHistory () {
-    if (this._mode === 'history') this._exitHistoryMode()
-    else this._enterHistoryMode()
+  /**
+   * Show a specific version's diff inside this editor panel. Called from the
+   * right-side context pane when the user clicks a commit.
+   *
+   * @param {object} version History version descriptor (sha, status, …).
+   * @param {object} [ctx] Context from the history module (versions list,
+   *   dirty state, untracked flag) so the diff view can render against the
+   *   right base without refetching.
+   */
+  showDiffVersion (version, ctx) {
+    this._enterDiffMode()
+    this._diffView?.showVersion(version, ctx)
   }
 
-  /** Mark the embedded history view as stale so its next open refetches. */
-  invalidateHistory () {
-    if (this._historyView) this._historyView.invalidate()
-  }
+  _enterDiffMode () {
+    if (this._mode === 'diff') return
+    this._mode = 'diff'
 
-  _enterHistoryMode () {
-    if (this._mode === 'history') return
-    this._mode = 'history'
-
-    if (!this._historyView) {
-      this._historyView = new HistoryView()
-      this._historyView.setPath(this._path)
-      this._historyView.onAfterRestore = () => {
+    if (!this._diffView) {
+      this._diffView = new DiffView()
+      this._diffView.setPath(this._path)
+      this._diffView.onAfterRestore = () => {
         this.loadContent()
-        this._exitHistoryMode()
+        this._exitDiffMode()
       }
-      this.element.appendChild(this._historyView.element)
+      this.element.appendChild(this._diffView.element)
     }
 
-    this.element.classList.add('mode-history')
+    this.element.classList.add('mode-diff')
 
     this._indicator.classList.add('hidden')
-    this._historyBtn.classList.add('hidden')
     this._saveBtn.classList.add('hidden')
     this._backBtn.classList.remove('hidden')
 
     this._breadcrumb.textContent = `Historial: ${basename(this._path)}`
-
-    this._historyView.load()
   }
 
-  _exitHistoryMode () {
+  _exitDiffMode () {
     if (this._mode === 'edit') return
     this._mode = 'edit'
 
-    this.element.classList.remove('mode-history')
+    this.element.classList.remove('mode-diff')
 
     this._indicator.classList.remove('hidden')
-    this._historyBtn.classList.remove('hidden')
     this._backBtn.classList.add('hidden')
     const s = panelStore.get(this._panelApi?.id)
     if (s?.isDirty) {
@@ -143,7 +138,6 @@ export class EditorPanelRenderer {
 
     this._breadcrumb.textContent = this._path
 
-    // Nudge Toast UI / Dockview to recompute layout after being hidden.
     requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
   }
 
@@ -247,7 +241,6 @@ export class EditorPanelRenderer {
     this._indicator.textContent = 'Guardado'
     this._panelApi.updateParameters({ dirty: false })
     setTimeout(() => { this._indicator.textContent = '' }, SAVED_INDICATOR_MS)
-    this.invalidateHistory()
   }
 
   /** Returns true if SSE should skip reloading (just saved by this client). */
@@ -262,9 +255,9 @@ export class EditorPanelRenderer {
 
   dispose () {
     clearTimeout(this._justSavedTimer)
-    if (this._historyView) {
-      this._historyView.dispose()
-      this._historyView = null
+    if (this._diffView) {
+      this._diffView.dispose()
+      this._diffView = null
     }
     if (this._editor) {
       this._editor.destroy()

@@ -9,6 +9,14 @@
 
 const { contextBridge, ipcRenderer } = require('electron')
 
+// Tag the document as running inside Electron on macOS, so CSS can
+// reserve space for the native traffic lights that float over the app-bar.
+if (process.platform === 'darwin') {
+  window.addEventListener('DOMContentLoaded', () => {
+    document.body.classList.add('platform-darwin')
+  })
+}
+
 contextBridge.exposeInMainWorld('electronAPI', {
   isElectron: true,
 
@@ -25,7 +33,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
    * Subscribe to menu-driven actions dispatched from the main process.
    * Returns an unsubscribe function.
    *
-   * Supported actions: 'new-file', 'toggle-sidebar', 'toggle-history', 'save'.
+   * Supported actions: 'new-file', 'toggle-sidebar', 'toggle-context-pane', 'save'.
    */
   onMenuAction: (callback) => {
     const listener = (_event, action) => callback(action)

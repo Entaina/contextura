@@ -8,7 +8,6 @@ import * as storage from '../storage.js'
 
 const sidebarEl = document.getElementById('sidebar')
 const resizeHandle = document.getElementById('resize-handle')
-const sidebarShowBtn = document.getElementById('sidebar-show-btn')
 const btnToggleSidebar = document.getElementById('btn-toggle-sidebar')
 
 const MIN_WIDTH_PX = 180
@@ -29,7 +28,6 @@ export function initSidebar ({ onLayoutChange }) {
   setupResizeHandle()
 
   btnToggleSidebar.addEventListener('click', toggleSidebar)
-  sidebarShowBtn.addEventListener('click', toggleSidebar)
 
   if (!storage.sidebarVisible.get()) {
     visible = true
@@ -41,7 +39,7 @@ export function toggleSidebar () {
   visible = !visible
   sidebarEl.classList.toggle('collapsed', !visible)
   resizeHandle.classList.toggle('hidden', !visible)
-  sidebarShowBtn.classList.toggle('visible', !visible)
+  btnToggleSidebar.setAttribute('aria-pressed', String(visible))
   storage.sidebarVisible.set(visible)
   setTimeout(onLayoutChangeRef, TOGGLE_RELAYOUT_DELAY_MS)
 }

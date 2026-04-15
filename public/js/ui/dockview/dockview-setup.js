@@ -28,6 +28,10 @@ function buildEditorPanelOpts (path) {
 }
 
 /**
+ * @param {Object} [opts]
+ * @param {(path: string | null) => void} [opts.onActivePanelChange]
+ *   Fired with the active panel's id (== file path) when it changes, and
+ *   with `null` when the last panel closes.
  * @returns {{
  *   dockview: import('https://esm.sh/dockview-core@5').DockviewComponent,
  *   openFile: (path: string, event?: MouseEvent) => Promise<void>,
@@ -37,7 +41,8 @@ function buildEditorPanelOpts (path) {
  *   restoreLayoutOrLastFile: () => void,
  * }}
  */
-export function initDockview () {
+export function initDockview ({ onActivePanelChange } = {}) {
+  const fireActivePanelChange = onActivePanelChange || (() => {})
   const dockviewContainer = document.getElementById('dockview-container')
 
   const dockview = new DockviewComponent(dockviewContainer, {
@@ -62,11 +67,15 @@ export function initDockview () {
     markActive(e.id)
     revealPath(e.id)
     storage.lastFile.set(e.id)
+    fireActivePanelChange(e.id)
   })
 
   dockview.onDidRemovePanel(() => {
     layoutStore.schedule()
-    if (!dockview.activePanel) clearActive()
+    if (!dockview.activePanel) {
+      clearActive()
+      fireActivePanelChange(null)
+    }
   })
   dockview.onDidAddPanel(() => layoutStore.schedule())
   dockview.onDidLayoutChange(() => layoutStore.schedule())

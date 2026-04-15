@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 #
-# Genera assets/icon.icns desde assets/source/Pi_01.png.
-# Pi_01 (557×580) se paddea a 1024×1024 con fondo Marengo (#6c6e72, gris
-# corporativo estructural de Entaina) y se expande a las 10 resoluciones
-# que Apple requiere para un iconset.
+# Genera assets/icon.icns desde assets/source/brand-icon.png.
+# El logo oficial de Entaina (marco + puntos People/Technology/Innovation,
+# idéntico a design-system.entaina.ai/brand/icon.png) se escala a 880px de
+# lado mayor, se paddea a 1024×1024 con fondo Golden Tainoi 200 (#f8cf73,
+# pilar People del Design System) y se expande a las 10 resoluciones que
+# Apple requiere para un iconset.
 #
 # Idempotente. Reejecutable sin efectos colaterales.
 #
@@ -14,11 +16,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-SRC="$REPO_ROOT/assets/source/Pi_01.png"
+SRC="$REPO_ROOT/assets/source/brand-icon.png"
 OUT_DIR="$REPO_ROOT/assets"
 ICONSET="$OUT_DIR/icon.iconset"
 BASE="$OUT_DIR/icon-1024.png"
-BG="6C6E72"  # Marengo — gris corporativo estructural del Design System
+RESAMPLED="$OUT_DIR/icon-resampled.png"
+BG="F8CF73"  # Golden Tainoi 200 — pilar People del Design System
 
 if [[ ! -f "$SRC" ]]; then
   echo "✗ Source image not found: $SRC" >&2
@@ -27,9 +30,13 @@ fi
 
 mkdir -p "$OUT_DIR" "$ICONSET"
 
-echo "→ Pad $SRC to 1024×1024 with bg #$BG"
+echo "→ Resample $SRC to 880px long edge"
+sips -s format png --resampleHeightWidthMax 880 \
+  "$SRC" --out "$RESAMPLED" >/dev/null
+
+echo "→ Pad to 1024×1024 with bg #$BG"
 sips -s format png --padToHeightWidth 1024 1024 --padColor "$BG" \
-  "$SRC" --out "$BASE" >/dev/null
+  "$RESAMPLED" --out "$BASE" >/dev/null
 
 echo "→ Generating iconset resolutions"
 # name           size
@@ -55,7 +62,7 @@ echo "→ Compiling to icns"
 iconutil -c icns "$ICONSET" -o "$OUT_DIR/icon.icns"
 
 # Cleanup intermediates; keep only the final .icns in source control.
-rm -rf "$ICONSET" "$BASE"
+rm -rf "$ICONSET" "$BASE" "$RESAMPLED"
 
 SIZE=$(ls -lh "$OUT_DIR/icon.icns" | awk '{print $5}')
 echo "✓ Icon generated: $OUT_DIR/icon.icns ($SIZE)"

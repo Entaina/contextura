@@ -26,8 +26,8 @@ El `rootPath` es elegido por el usuario y puede cambiar en cualquier momento des
 - **`electron/config.cjs`** — Persiste `{ rootPath, windowBounds }` en `app.getPath('userData')/config.json`.
 - **`electron/updater.cjs`** — Wrapper sobre `electron-updater`. No-op cuando `!app.isPackaged`. El flujo que experimenta el usuario está descrito en [features/plataforma/auto-update.md](features/plataforma/auto-update.md); el flujo de publicación y el detalle operativo de la actualización están en [release.md](release.md).
 - **`electron-builder.yml`** — Config del builder. Produce un DMG sin firmar (arm64 + x64) en `dist/`. `publish: github` apuntando a `Entaina/contextura`.
-- **`assets/icon.icns`** — Icono de la app. Generado por `scripts/build-icon.sh` desde `assets/source/Pi_01.png` (mascota de marca Entaina) con padding gris Marengo (#6c6e72).
-- **`assets/source/Pi_01.png`** — Imagen fuente del icono. Asset de marca Entaina copiado aquí para que el repo sea autocontenido.
+- **`assets/icon.icns`** — Icono de la app. Generado por `scripts/build-icon.sh` desde `assets/source/brand-icon.png` (logo oficial Entaina) sobre fondo amarillo Golden Tainoi 200 (#f8cf73, pilar People del Design System).
+- **`assets/source/brand-icon.png`** — Imagen fuente del icono. Copia idéntica a `design-system.entaina.ai/brand/icon.png`, versionada aquí para que el repo sea autocontenido. `assets/source/Pi_01.png` se conserva como branding alternativo (mascota).
 
 ## Acciones del menú
 

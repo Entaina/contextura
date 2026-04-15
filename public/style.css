@@ -102,7 +102,7 @@
 
   --sidebar-width:  280px;
   --header-height:  44px;
-  --app-bar-height: 36px;
+  --titlebar-height: 30px;
   --traffic-lights-inset: 78px;
 
   /* ---- Dockview theme vars (a nivel :root para que hereden siempre) ---- */
@@ -143,62 +143,39 @@ body {
   height: 100vh;
 }
 
-/* ---- App bar (global layout chrome) ---- */
+/* ---- Titlebar (drag region — merges visually with native macOS chrome) ---- */
 
-#app-bar {
+#titlebar {
+  height: var(--titlebar-height);
+  flex-shrink: 0;
+  background: transparent;
   display: flex;
   align-items: center;
-  height: var(--app-bar-height);
-  background: var(--sidebar-bg);
-  color: var(--sidebar-text);
-  border-bottom: 1px solid var(--pane-divider);
-  flex-shrink: 0;
+  justify-content: flex-end;
+  padding: 0 8px;
   -webkit-app-region: drag;
 }
-body.platform-darwin #app-bar {
+body.platform-darwin #titlebar {
   padding-left: var(--traffic-lights-inset);
 }
 
-.app-bar-left {
-  display: inline-flex;
-  align-items: center;
-}
-
-.app-brand {
-  font-family: var(--font-display, 'Space Grotesk', sans-serif);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--sidebar-text);
-  opacity: 0.92;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-/* Micro-isotipo: dos semillas visibles (copperfield + golden-tainoi).
-   El app-bar y la sidebar comparten el fondo hoki, así que los tres
-   pilares siguen presentes — dos como puntos y uno como superficie. */
-.app-brand::before {
-  content: '';
-  display: inline-block;
-  width: 14px;
-  height: 6px;
-  flex-shrink: 0;
-  background:
-    radial-gradient(circle at 3px 3px, var(--primary-seed) 2.5px, transparent 3px),
-    radial-gradient(circle at 11px 3px, var(--secondary) 2.5px, transparent 3px);
-}
-
-.app-bar-center {
-  flex: 1;
-}
-
-.app-bar-actions {
+.titlebar-actions {
   display: flex;
   gap: 2px;
-  padding: 0 8px;
-  margin-left: auto;
   -webkit-app-region: no-drag;
+}
+
+.titlebar-actions .icon-btn {
+  color: var(--text-subtle);
+  padding: 4px 6px;
+}
+.titlebar-actions .icon-btn:hover {
+  color: var(--text);
+  background: var(--surface-alt);
+}
+.titlebar-actions .icon-btn svg {
+  width: 15px;
+  height: 15px;
 }
 
 /* ---- App body (horizontal layout: sidebar | main | context-pane) ---- */
@@ -568,19 +545,16 @@ body.platform-darwin #app-bar {
 
 /* Tabs container: cabecera Innovation clarita (copperfield-50).
    Usamos !important porque dockview-core@5 clona cssRules a <style> tags
-   en runtime y puede ganar en cascada a las variables de :root. Esta es
-   la única vía fiable de forzar el look. */
+   en runtime y puede ganar en cascada a las variables de :root. */
 .dockview-theme-entaina .dv-tabs-and-actions-container,
 body .dockview-theme-entaina .dv-tabs-and-actions-container {
   background-color: var(--primary-soft) !important;
-  border-bottom: 1px solid var(--on-light);
-  padding-top: 4px;
-  padding-left: 6px;
+  border-bottom: 1px solid var(--border);
+  padding: 4px 6px 0;
 }
 
-/* Pestañas individuales: fondo Innovation con borde on-light para
-   dar forma de "tab". Inactivas en copperfield-100 (base), activa
-   en copperfield-200 (destaca por saturación, no por contraste de fondo). */
+/* Pestañas inactivas: sin fondo ni borde, solo texto muted. Minimalismo
+   VS Code / Chrome style: el tab solo destaca cuando está activo. */
 .dockview-theme-entaina .dv-tab,
 .dockview-theme-entaina .dv-groupview.dv-active-group
   > .dv-tabs-and-actions-container .dv-tabs-container
@@ -588,24 +562,32 @@ body .dockview-theme-entaina .dv-tabs-and-actions-container {
 .dockview-theme-entaina .dv-groupview.dv-inactive-group
   > .dv-tabs-and-actions-container .dv-tabs-container
   > .dv-tab {
-  background-color: var(--primary-light) !important;
-  color: var(--text-muted) !important;
-  border: 1px solid var(--on-light);
+  background-color: transparent !important;
+  color: var(--text-subtle) !important;
+  border: 1px solid transparent;
   border-bottom: none;
-  border-radius: 5px 5px 0 0;
+  border-radius: 6px 6px 0 0;
   margin-right: 2px;
   margin-bottom: -1px; /* solapa el border-bottom del container */
+  padding: 0 14px;
   transition: background-color 0.12s, color 0.12s;
 }
+.dockview-theme-entaina .dv-tab:hover {
+  color: var(--text) !important;
+}
 
+/* Pestaña activa: fondo blanco (alto contraste sobre el container
+   copperfield-50) + borde chicago-200, efecto "folder tab" pegada al
+   documento por el margin-bottom negativo. */
 .dockview-theme-entaina .dv-groupview.dv-active-group
   > .dv-tabs-and-actions-container .dv-tabs-container
   > .dv-tab.dv-active-tab,
 .dockview-theme-entaina .dv-groupview.dv-inactive-group
   > .dv-tabs-and-actions-container .dv-tabs-container
   > .dv-tab.dv-active-tab {
-  background-color: var(--copperfield-200) !important;
+  background-color: var(--background) !important;
   color: var(--text) !important;
+  border-color: var(--border);
 }
 
 /* Overflow dropdown (chevron + contador de tabs ocultas) — contraste

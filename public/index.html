@@ -35,13 +35,9 @@
 </head>
 <body>
 
-  <!-- App bar: global layout chrome (drag region + layout toggles) -->
-  <header id="app-bar">
-    <div class="app-bar-left">
-      <span class="app-brand">Contextura</span>
-    </div>
-    <div class="app-bar-center"></div>
-    <div class="app-bar-actions">
+  <!-- Titlebar drag region: transparent, merges with native macOS titlebar -->
+  <div id="titlebar" aria-hidden="true">
+    <div class="titlebar-actions">
       <button id="btn-toggle-sidebar" class="icon-btn" aria-pressed="true" title="Sidebar (⌘B)">
         <i data-lucide="panel-left"></i>
       </button>
@@ -49,7 +45,7 @@
         <i data-lucide="panel-right"></i>
       </button>
     </div>
-  </header>
+  </div>
 
   <div id="app-body">
     <!-- Sidebar -->

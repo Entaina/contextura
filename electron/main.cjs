@@ -290,6 +290,18 @@ app.whenReady().then(bootstrap).catch((err) => {
   app.quit()
 })
 
+let isQuitting = false
+app.on('before-quit', (event) => {
+  if (isQuitting) return
+  isQuitting = true
+  if (!serverHandle) return
+  event.preventDefault()
+  const timeout = new Promise(resolve => setTimeout(resolve, 2000))
+  Promise.race([serverHandle.stop(), timeout])
+    .catch(err => console.warn('[main] stop failed:', err.message))
+    .finally(() => { serverHandle = null; app.exit(0) })
+})
+
 app.on('window-all-closed', async () => {
   if (serverHandle) {
     try { await serverHandle.stop() } catch { /* noop */ }

@@ -255,6 +255,8 @@ export function startServer ({ rootPath, port = 4986, host = '127.0.0.1' } = {})
 
       async function stop () {
         closeAllConnections()
+        if (typeof server.closeIdleConnections === 'function') server.closeIdleConnections()
+        if (typeof server.closeAllConnections === 'function') server.closeAllConnections()
         await watcher.close()
         await new Promise(resolve => server.close(() => resolve()))
       }

@@ -8,6 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Releases are managed automatically by [release-please](https://github.com/googleapis/release-please)
 from [Conventional Commits](https://www.conventionalcommits.org/) in the git history.
 
+## [0.4.0](https://github.com/Entaina/contextura/compare/v0.3.0...v0.4.0) (2026-04-15)
+
+
+### Features
+
+* **context-pane:** render per-file history timeline in right pane ([1cad038](https://github.com/Entaina/contextura/commit/1cad0380e28b60a20b89abdb440cfcee0123d9b9))
+* **context-pane:** scaffold right-side contextual pane ([b7a43d1](https://github.com/Entaina/contextura/commit/b7a43d1c559d4c4a74493a2ffa67cd0a01f351a6))
+
+
+### Bug Fixes
+
+* **context-pane:** remove 1px border sliver and reshape show button ([8616c9d](https://github.com/Entaina/contextura/commit/8616c9dba4050763adc461129f3d31499aa4aedd))
+
+
+### Code Refactoring
+
+* **history:** split timeline + diff, deprecate inline history mode ([7cc0f75](https://github.com/Entaina/contextura/commit/7cc0f75081461f920c75c1b349a89f763f58f20a))
+* **history:** unify "Versión actual" entry and diff against live editor ([ea7f44e](https://github.com/Entaina/contextura/commit/ea7f44e7a14c777dbc138f67801559eb83bcdee1))
+* **layout:** titlebar-integrated toggles + tab restyle ([857deeb](https://github.com/Entaina/contextura/commit/857deeb6a2120f8ef79e40ae1bf8dc3a54bd825e))
+* **layout:** VS Code-style app-bar with unified layout toggles ([f9c4d53](https://github.com/Entaina/contextura/commit/f9c4d53f9bead3a049cb0e574bbfd6ebb1f06d09))
+
 ## [0.3.0](https://github.com/Entaina/contextura/compare/v0.2.0...v0.3.0) (2026-04-14)
 
 

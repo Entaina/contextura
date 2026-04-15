@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Releases are managed automatically by [release-please](https://github.com/googleapis/release-please)
 from [Conventional Commits](https://www.conventionalcommits.org/) in the git history.
 
+## [0.4.1](https://github.com/Entaina/contextura/compare/v0.4.0...v0.4.1) (2026-04-15)
+
+
+### Bug Fixes
+
+* **shutdown:** ensure clean quit by closing idle sockets and watcher timer ([0b5f49d](https://github.com/Entaina/contextura/commit/0b5f49d398b210d76671fc9960477df7279e55a5))
+
 ## [0.4.0](https://github.com/Entaina/contextura/compare/v0.3.0...v0.4.0) (2026-04-15)
 
 

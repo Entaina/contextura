@@ -102,6 +102,8 @@
 
   --sidebar-width:  280px;
   --header-height:  44px;
+  --app-bar-height: 36px;
+  --traffic-lights-inset: 78px;
 
   /* ---- Dockview theme vars (a nivel :root para que hereden siempre) ---- */
   --dv-group-view-background-color: var(--background);
@@ -137,7 +139,75 @@ html, body {
 
 body {
   display: flex;
+  flex-direction: column;
   height: 100vh;
+}
+
+/* ---- App bar (global layout chrome) ---- */
+
+#app-bar {
+  display: flex;
+  align-items: center;
+  height: var(--app-bar-height);
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  border-bottom: 1px solid var(--pane-divider);
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+}
+body.platform-darwin #app-bar {
+  padding-left: var(--traffic-lights-inset);
+}
+
+.app-bar-left {
+  display: inline-flex;
+  align-items: center;
+}
+
+.app-brand {
+  font-family: var(--font-display, 'Space Grotesk', sans-serif);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--sidebar-text);
+  opacity: 0.92;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+/* Micro-isotipo: dos semillas visibles (copperfield + golden-tainoi).
+   El app-bar y la sidebar comparten el fondo hoki, así que los tres
+   pilares siguen presentes — dos como puntos y uno como superficie. */
+.app-brand::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 6px;
+  flex-shrink: 0;
+  background:
+    radial-gradient(circle at 3px 3px, var(--primary-seed) 2.5px, transparent 3px),
+    radial-gradient(circle at 11px 3px, var(--secondary) 2.5px, transparent 3px);
+}
+
+.app-bar-center {
+  flex: 1;
+}
+
+.app-bar-actions {
+  display: flex;
+  gap: 2px;
+  padding: 0 8px;
+  margin-left: auto;
+  -webkit-app-region: no-drag;
+}
+
+/* ---- App body (horizontal layout: sidebar | main | context-pane) ---- */
+
+#app-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* ---- Sidebar ---- */
@@ -163,47 +233,13 @@ body {
   pointer-events: none;
 }
 
-.sidebar-header {
+.sidebar-toolbar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 10px;
-  height: var(--header-height);
+  justify-content: flex-end;
+  gap: 2px;
+  padding: 4px 8px;
   border-bottom: 1px solid var(--sidebar-border);
   flex-shrink: 0;
-  gap: 4px;
-}
-
-.sidebar-logo {
-  font-family: var(--font-display, 'Space Grotesk', sans-serif);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--sidebar-text);
-  opacity: 0.9;
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-/* Micro-isotipo: dos semillas visibles (copperfield + golden-tainoi).
-   La sidebar ya ES hoki, así que el tercer pilar lo aporta el fondo
-   — los tres pilares siempre presentes, dos como puntos y uno como
-   superficie. */
-.sidebar-logo::before {
-  content: '';
-  display: inline-block;
-  width: 14px;
-  height: 6px;
-  flex-shrink: 0;
-  background:
-    radial-gradient(circle at 3px 3px, var(--primary-seed) 2.5px, transparent 3px),
-    radial-gradient(circle at 11px 3px, var(--secondary) 2.5px, transparent 3px);
-}
-
-.sidebar-header-actions {
-  display: flex;
-  gap: 2px;
 }
 
 .icon-btn {
@@ -231,6 +267,8 @@ body {
   color: var(--sidebar-text);
   background: var(--sidebar-hover);
 }
+.icon-btn[aria-pressed="false"] { opacity: 0.55; }
+.icon-btn svg { width: 16px; height: 16px; }
 
 .sidebar-search {
   padding: 8px 10px;
@@ -387,46 +425,6 @@ body {
   pointer-events: none;
 }
 
-.context-pane-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 10px;
-  height: var(--header-height);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  gap: 4px;
-}
-
-.context-pane-title {
-  font-family: var(--font-display, 'Space Grotesk', sans-serif);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--text);
-  opacity: 0.85;
-}
-
-.context-pane-header .icon-btn {
-  background: transparent;
-  border: 0;
-  color: var(--text-subtle);
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 4px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.context-pane-header .icon-btn:hover {
-  color: var(--text);
-  background: var(--surface-alt);
-}
-.context-pane-header .icon-btn svg {
-  width: 16px;
-  height: 16px;
-}
-
 #context-pane-body {
   flex: 1;
   overflow: auto;
@@ -564,19 +562,6 @@ body {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   line-height: 1.35;
-}
-
-.sidebar-show-btn-right {
-  left: auto;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 14px 4px;
-  border-right: 0;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-  background: var(--surface);
-  box-shadow: -1px 0 4px rgba(0, 0, 0, 0.05);
 }
 
 /* ---- Dockview theme overrides ---- */
@@ -1011,32 +996,6 @@ body .dockview-theme-entaina .dv-tabs-and-actions-container {
   min-width: 0;
 }
 .draft-input::placeholder { color: var(--sidebar-muted); opacity: 0.7; }
-
-/* ---- Show sidebar button (when collapsed) ---- */
-
-.sidebar-show-btn {
-  position: fixed;
-  top: 8px;
-  left: 8px;
-  z-index: 100;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text-subtle);
-  cursor: pointer;
-  padding: 6px 8px;
-  border-radius: 6px;
-  font-size: 14px;
-  line-height: 1;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.15s, background 0.15s;
-}
-.sidebar-show-btn:hover {
-  color: var(--text);
-  background: var(--surface-alt);
-}
-.sidebar-show-btn.visible { display: inline-flex; }
 
 /* Drag and Drop */
 .tree-item.file[draggable="true"] { cursor: grab; }

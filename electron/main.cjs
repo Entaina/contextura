@@ -233,6 +233,10 @@ function createWindow (url) {
     minHeight: 600,
     title: 'Contextura',
     backgroundColor: '#ffffff', // matching --background del tema propio
+    ...(process.platform === 'darwin' && {
+      titleBarStyle: 'hiddenInset',
+      trafficLightPosition: { x: 12, y: 10 },
+    }),
     webPreferences: {
       preload: PRELOAD_PATH,
       contextIsolation: true,

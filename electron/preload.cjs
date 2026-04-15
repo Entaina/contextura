@@ -9,6 +9,14 @@
 
 const { contextBridge, ipcRenderer } = require('electron')
 
+// Tag the document as running inside Electron on macOS, so CSS can
+// reserve space for the native traffic lights that float over the app-bar.
+if (process.platform === 'darwin') {
+  window.addEventListener('DOMContentLoaded', () => {
+    document.body.classList.add('platform-darwin')
+  })
+}
+
 contextBridge.exposeInMainWorld('electronAPI', {
   isElectron: true,
 

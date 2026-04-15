@@ -9,7 +9,6 @@ import * as storage from '../../storage.js'
 
 const paneEl = document.getElementById('context-pane')
 const resizeHandle = document.getElementById('context-resize-handle')
-const showBtn = document.getElementById('context-pane-show-btn')
 const toggleBtn = document.getElementById('btn-toggle-context-pane')
 
 const MIN_WIDTH_PX = 220
@@ -34,7 +33,6 @@ export function initContextPane ({ onLayoutChange }) {
   setupResizeHandle()
 
   toggleBtn.addEventListener('click', toggleContextPane)
-  showBtn.addEventListener('click', toggleContextPane)
 
   if (!storage.contextPaneVisible.get()) {
     visible = true
@@ -46,7 +44,7 @@ export function toggleContextPane () {
   visible = !visible
   paneEl.classList.toggle('collapsed', !visible)
   resizeHandle.classList.toggle('hidden', !visible)
-  showBtn.classList.toggle('visible', !visible)
+  toggleBtn.setAttribute('aria-pressed', String(visible))
   storage.contextPaneVisible.set(visible)
   setTimeout(onLayoutChangeRef, TOGGLE_RELAYOUT_DELAY_MS)
 }

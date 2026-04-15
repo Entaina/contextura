@@ -6,6 +6,7 @@
  */
 
 import { HistoryModule } from './history-module.js'
+import { panelStore } from '../../state/panel-store.js'
 
 const bodyEl = document.getElementById('context-pane-body')
 
@@ -15,8 +16,8 @@ let onVersionSelectRef = () => {}
 
 /**
  * @param {Object} deps
- * @param {(path: string, version: object, ctx: object) => void} deps.onVersionSelect
- *   Called when the user clicks a commit in the history timeline. The
+ * @param {(path: string, version: object) => void} deps.onVersionSelect
+ *   Called when the user clicks an entry in the history timeline. The
  *   host module (app.js) forwards this to the active editor panel.
  */
 export function initContextHost ({ onVersionSelect }) {
@@ -37,7 +38,8 @@ export function setActiveFile (path) {
 
   if (!historyModule) {
     historyModule = new HistoryModule({
-      onVersionSelect: (v, ctx) => onVersionSelectRef(currentPath, v, ctx),
+      onVersionSelect: (v) => onVersionSelectRef(currentPath, v),
+      isEditorDirty: (p) => !!panelStore.get(p)?.isDirty,
     })
   }
 
@@ -56,6 +58,16 @@ export function invalidateHistory (path) {
   if (!historyModule) return
   historyModule.invalidate(path)
   if (path === currentPath) historyModule.load()
+}
+
+/**
+ * Re-render the history timeline without refetching. Called by editor panels
+ * when the editor dirty flag transitions so HEAD absorption and the
+ * "Versión actual" subtitle stay in sync with in-memory edits.
+ */
+export function notifyEditorDirtyChanged (path) {
+  if (!historyModule || path !== currentPath) return
+  historyModule.refresh()
 }
 
 function renderEmpty () {

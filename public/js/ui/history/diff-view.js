@@ -3,12 +3,16 @@
  *
  * Renders the Google-Docs-style inline diff for a single version of a file,
  * plus the restore toolbar. The version to show is pushed in from outside
- * (via `showVersion(version, ctx)`) — usually from the right-side context
- * pane's history timeline. This view owns no timeline of its own; selection
- * happens elsewhere.
+ * (via `showVersion(version)`) — usually from the right-side context pane's
+ * history timeline. This view owns no timeline of its own; selection happens
+ * elsewhere.
+ *
+ * Diffs are always computed against the **live editor content**, provided
+ * by `setCurrentContentProvider(fn)`. This makes in-memory edits visible in
+ * every historical diff and keeps the "Versión actual" semantics honest.
  *
  * Relies on:
- * - `api.*` for all HTTP I/O (file, diff, content, putFile).
+ * - `api.*` for restore (putFile) and fetching historical commit content.
  * - Toast UI's `window.markdownit` (loaded via index.html).
  * - `htmldiff-js` loaded dynamically from CDN the first time a diff renders.
  */
@@ -51,6 +55,7 @@ export class DiffView {
     this._selectedOldContent = null
     this._selectedLabel = null
     this._md = null
+    this._getCurrentContent = null
 
     /** Parent-provided callback — invoked after a successful restore. */
     this.onAfterRestore = null
@@ -61,75 +66,25 @@ export class DiffView {
   }
 
   /**
+   * Inject the live-editor content provider. The returned string is used as
+   * the "new" side of every diff so in-memory edits are always reflected.
+   * @param {() => string} fn
+   */
+  setCurrentContentProvider (fn) {
+    this._getCurrentContent = fn
+  }
+
+  /**
    * Render the inline diff for a specific version.
    *
    * @param {object} version History version descriptor (sha, status, …).
-   * @param {object} [ctx]
-   * @param {object[]} [ctx.versions] Full history list, for head/dirty logic.
-   * @param {boolean} [ctx.hasUncommittedChanges]
-   * @param {boolean} [ctx.untracked]
    */
-  async showVersion (version, ctx = {}) {
-    if (version?.status === 'U') {
-      return this._showUncommitted(ctx)
-    }
-    return this._showCommitted(version, ctx)
-  }
-
-  async _showUncommitted (ctx) {
-    const versions = ctx.versions || []
-    this._selectedOldContent = null
-    this._selectedLabel = 'versión actual'
-
-    if (this._contextLabel) {
-      this._contextLabel.textContent = 'Versión actual → historial (cambios sin confirmar)'
-    }
-    this._diffContainer.innerHTML = '<div class="history-empty">Cargando cambios…</div>'
-    this._restoreBtn.classList.add('hidden')
-
-    try {
-      const newRes = await api.getFile(this._path)
-      if (!newRes.ok) throw new Error('file fetch failed')
-      const newContent = await newRes.text()
-
-      let oldContent = ''
-      if (versions.length > 0) {
-        const head = versions[0]
-        const res = await api.getDiff(this._path, head.sha, head.path)
-        if (res.ok) {
-          const data = await res.json()
-          oldContent = data.oldContent || ''
-        }
-      }
-
-      const syntheticVersion = { status: 'U', untracked: !!ctx.untracked }
-      await this._renderInlineDiff(oldContent, newContent, syntheticVersion)
-    } catch (err) {
-      console.error('diff view uncommitted error', err)
-      this._diffContainer.innerHTML = '<div class="history-empty">No se pudieron cargar los cambios sin confirmar.</div>'
-    }
-  }
-
-  async _showCommitted (version, ctx) {
-    const versions = ctx.versions || []
-    const dirty = !!ctx.hasUncommittedChanges
-
+  async showVersion (version) {
     this._selectedLabel = `${relativeTimeEs(version.dateIso)} (${absoluteDateEs(version.dateIso)})`
 
-    const isHead = versions[0]?.sha === version.sha
-    const isHeadClean = !dirty && isHead
-    const isHeadDirty = dirty && isHead
-
     if (this._contextLabel) {
-      if (isHeadClean) {
-        this._contextLabel.textContent = `Versión actual · ${relativeTimeEs(version.dateIso)}`
-      } else if (dirty) {
-        // Diffs for historical commits always compare against HEAD when the
-        // working tree is dirty — keeps local edits out of historical diffs.
-        this._contextLabel.textContent = `Cambios de ${relativeTimeEs(version.dateIso)} → último commit`
-      } else {
-        this._contextLabel.textContent = `Cambios de ${relativeTimeEs(version.dateIso)} → versión actual`
-      }
+      this._contextLabel.textContent =
+        `Cambios de ${relativeTimeEs(version.dateIso)} → versión actual`
     }
     this._diffContainer.innerHTML = '<div class="history-empty">Cargando cambios…</div>'
     this._restoreBtn.classList.add('hidden')
@@ -138,14 +93,7 @@ export class DiffView {
       const oldContent = await this._fetchContentAt(version)
       this._selectedOldContent = oldContent
 
-      let newContent
-      if (dirty && versions.length > 0) {
-        newContent = (await this._fetchContentAt(versions[0])) || ''
-      } else {
-        const newRes = await api.getFile(this._path)
-        if (!newRes.ok) throw new Error('file fetch failed')
-        newContent = await newRes.text()
-      }
+      const newContent = this._getCurrentContent ? (this._getCurrentContent() ?? '') : ''
 
       if (oldContent == null && version?.status !== 'A') {
         this._diffContainer.innerHTML = '<div class="history-empty">Esta versión no existía en esa fecha.</div>'
@@ -164,8 +112,8 @@ export class DiffView {
         return
       }
 
-      await this._renderInlineDiff(oldContent, newContent, version, { isHeadClean, isHeadDirty })
-      if (!isHeadClean) this._restoreBtn.classList.remove('hidden')
+      await this._renderInlineDiff(oldContent, newContent, version)
+      this._restoreBtn.classList.remove('hidden')
     } catch (err) {
       console.error('diff view showVersion error', err)
       this._diffContainer.innerHTML = '<div class="history-empty">No se pudieron cargar los cambios.</div>'
@@ -173,32 +121,10 @@ export class DiffView {
     }
   }
 
-  async _renderInlineDiff (oldContent, newContent, version, opts = {}) {
+  async _renderInlineDiff (oldContent, newContent, version) {
     const md = this._ensureMarkdown()
     if (!md) {
       this._diffContainer.innerHTML = '<div class="history-empty">No se pudo cargar el parser de markdown.</div>'
-      return
-    }
-
-    if (version?.status === 'U') {
-      const HtmlDiff = await this._ensureHtmlDiff()
-      if (!HtmlDiff) {
-        this._diffContainer.innerHTML = '<div class="history-empty">No se pudo cargar el visor de cambios.</div>'
-        return
-      }
-      const oldHtml = md.render(oldContent || '')
-      const newHtml = md.render(newContent || '')
-      const merged = HtmlDiff.execute(oldHtml, newHtml)
-      const intro = version.untracked
-        ? 'Este archivo aún no está añadido al historial del repositorio.'
-        : 'Estos cambios aún no se han guardado en el historial del repositorio.'
-      const banner = `
-        <div class="history-banner history-banner-uncommitted">
-          <strong>⚠️ Cambios sin confirmar</strong>
-          ${intro} Usa <code>git commit</code> para guardarlos permanentemente.
-        </div>
-      `
-      this._diffContainer.innerHTML = `${banner}<article class="history-doc-view">${merged}</article>`
       return
     }
 
@@ -233,19 +159,6 @@ export class DiffView {
     const isPureRename = isRename && version.similarity === 100
 
     if (!hasContentChanges) {
-      if (opts.isHeadDirty) {
-        const contentHtml = md.render(newContent || '')
-        const banner = `
-          <div class="history-banner history-banner-unchanged">
-            <strong>✓ Último commit del historial</strong>
-            Tus cambios locales están en <em>"Versión actual"</em> (primera entrada de la lista).
-            Usa <strong>"Restaurar esta versión"</strong> si quieres descartarlos.
-          </div>
-        `
-        this._diffContainer.innerHTML = `${banner}<article class="history-doc-view">${contentHtml}</article>`
-        return
-      }
-
       if (isRename) {
         const lead = isPureRename
           ? 'En esa versión solo cambió la ubicación del archivo:'
@@ -259,20 +172,6 @@ export class DiffView {
             <p class="history-rename-path">${escapeHtml(version.path)}</p>
           </div>
         `
-        return
-      }
-      if (opts.isHeadClean) {
-        const contentHtml = md.render(newContent || '')
-        const subjectPart = version.subject
-          ? ` — <em>${escapeHtml(version.subject)}</em>`
-          : ''
-        const banner = `
-          <div class="history-banner history-banner-unchanged">
-            <strong>✓ Versión actual</strong>
-            Sin cambios desde ${escapeHtml(relativeTimeEs(version.dateIso))}${subjectPart}.
-          </div>
-        `
-        this._diffContainer.innerHTML = `${banner}<article class="history-doc-view">${contentHtml}</article>`
         return
       }
       this._diffContainer.innerHTML = '<div class="history-empty">Esta versión es idéntica al archivo actual.</div>'

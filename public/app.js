@@ -39,10 +39,16 @@ async function init () {
   })
 
   initContextHost({
-    onVersionSelect: (path, version, ctx) => {
+    onVersionSelect: (path, version) => {
       const active = dv.dockview?.activePanel
       if (!active || active.id !== path) return
-      panelStore.get(active.id)?.renderer?.showDiffVersion(version, ctx)
+      const renderer = panelStore.get(active.id)?.renderer
+      if (!renderer) return
+      if (version?.kind === 'current') {
+        renderer.returnToEditor()
+      } else {
+        renderer.showDiffVersion(version)
+      }
     },
   })
 

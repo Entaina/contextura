@@ -2,7 +2,7 @@
 
 ## Acerca de este índice
 
-Este módulo agrupa las features del área de edición: cómo se abren los ficheros, cómo se distribuyen en pestañas y paneles, el editor propiamente dicho, la pantalla inicial cuando no hay nada abierto y los elementos de estado del panel como la ruta del fichero en la cabecera. También cubre lo que la aplicación recuerda entre sesiones sobre la distribución y el estado de la edición.
+Este módulo agrupa las features del área de edición: cómo se abren los ficheros, cómo se distribuyen en pestañas y paneles, el editor propiamente dicho y la pantalla inicial cuando no hay nada abierto. También cubre lo que la aplicación recuerda entre sesiones sobre la distribución y el estado de la edición.
 
 La implementación técnica vive en [../../frontend.md](../../frontend.md).
 
@@ -28,6 +28,3 @@ La implementación técnica vive en [../../frontend.md](../../frontend.md).
 
 - [ultimo-fichero.md](ultimo-fichero.md): Reapertura del último fichero al arrancar
   - Leer al tocar el estado inicial al abrir la app
-
-- [breadcrumb.md](breadcrumb.md): Ruta del fichero en la cabecera de cada panel
-  - Leer al tocar el texto de cabecera de los paneles de edición

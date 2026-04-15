@@ -10,18 +10,18 @@ import { escapeHtml } from '../../infra/dom.js'
 import { absoluteDateEs, firstName, relativeTimeEs } from '../../domain/date-es.js'
 import { versionTypeBadge } from '../../domain/version-badge.js'
 
-const ICON_WARN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>'
-
 export class HistoryModule {
   /**
    * @param {Object} opts
-   * @param {(version: object, ctx: {
-   *   versions: object[],
-   *   hasUncommittedChanges: boolean,
-   *   untracked: boolean,
-   * }) => void} opts.onVersionSelect
+   * @param {(version: object) => void} opts.onVersionSelect
+   *   Invoked when the user clicks a timeline entry. The `version` object is
+   *   either `{ kind: 'current' }` for the "Versión actual" entry or a git
+   *   commit descriptor for any other row.
+   * @param {(path: string) => boolean} [opts.isEditorDirty]
+   *   Returns true if the Toast UI editor for `path` has unsaved edits.
+   *   Used to decide whether HEAD can be absorbed into "Versión actual".
    */
-  constructor ({ onVersionSelect }) {
+  constructor ({ onVersionSelect, isEditorDirty }) {
     this.element = document.createElement('div')
     this.element.className = 'context-history'
 
@@ -31,6 +31,7 @@ export class HistoryModule {
     this.element.appendChild(this._timeline)
 
     this._onVersionSelect = onVersionSelect || (() => {})
+    this._isEditorDirty = isEditorDirty || (() => false)
 
     this._path = null
     this._selectedKey = null
@@ -71,14 +72,6 @@ export class HistoryModule {
     }
   }
 
-  _ctxForClick () {
-    return {
-      versions: this._state?.versions || [],
-      hasUncommittedChanges: !!this._state?.hasUncommittedChanges,
-      untracked: !!this._state?.untracked,
-    }
-  }
-
   /**
    * Mark a path's cache as stale. Called from the SSE watcher when the file
    * changes on disk.
@@ -89,27 +82,26 @@ export class HistoryModule {
     else this._cache.clear()
   }
 
-  _renderTimeline ({ versions, hasUncommittedChanges, untracked, notInGit }) {
-    if (notInGit && !hasUncommittedChanges) {
-      this._timeline.innerHTML = `
-        <div class="context-history-empty">
-          <strong>Sin historial todavía.</strong>
-          <p>Se creará cuando este fichero se guarde en un commit.</p>
-        </div>
-      `
-      return
-    }
+  /**
+   * Re-render the timeline from the cached state for the current path. Called
+   * when the editor's dirty flag transitions, so HEAD absorption and the
+   * "Versión actual" subtitle stay in sync with in-memory edits without
+   * refetching git history.
+   */
+  refresh () {
+    if (this._state) this._renderTimeline(this._state)
+  }
 
+  _renderTimeline ({ versions, hasUncommittedChanges }) {
     const frag = document.createDocumentFragment()
-    const dirty = hasUncommittedChanges
+    const editorDirty = this._isEditorDirty(this._path)
+    const currentEqualsHead = !hasUncommittedChanges && !editorDirty && versions.length > 0
 
-    if (dirty) {
-      frag.appendChild(this._buildUncommittedItem(untracked))
-    }
+    frag.appendChild(this._buildCurrentItem({ editorDirty, gitDirty: hasUncommittedChanges }))
 
     versions.forEach((v, i) => {
-      const isHeadClean = !dirty && i === 0
-      frag.appendChild(this._buildCommitItem(v, isHeadClean))
+      if (currentEqualsHead && i === 0) return
+      frag.appendChild(this._buildCommitItem(v))
     })
 
     this._timeline.innerHTML = ''
@@ -117,43 +109,41 @@ export class HistoryModule {
     this._applySelection()
   }
 
-  _buildUncommittedItem (untracked) {
-    const subtitle = untracked
-      ? 'Aún no añadido al historial'
-      : 'Con cambios sin confirmar'
-
+  _buildCurrentItem ({ editorDirty, gitDirty }) {
     const item = document.createElement('div')
-    item.className = 'context-history-item uncommitted'
-    item.dataset.key = 'uncommitted'
+    item.className = 'context-history-item current'
+    item.dataset.key = 'current'
+    let subtitleText = ''
+    if (editorDirty) subtitleText = 'Sin guardar'
+    else if (gitDirty) subtitleText = 'Sin confirmar'
+    const subtitle = subtitleText
+      ? `<div class="context-history-subject"><em>${subtitleText}</em></div>`
+      : ''
     item.innerHTML = `
       <div class="context-history-dot"></div>
       <div class="context-history-body">
         <div class="context-history-title-row">
-          <span class="context-history-badge type-uncommitted" title="Cambios sin confirmar">${ICON_WARN}</span>
           <div class="context-history-title">Versión actual</div>
         </div>
-        <div class="context-history-subject"><em>${subtitle}</em></div>
+        ${subtitle}
       </div>
     `
     item.addEventListener('click', () => {
-      this._selectedKey = 'uncommitted'
+      this._selectedKey = 'current'
       this._applySelection()
-      this._onVersionSelect({ status: 'U', untracked }, this._ctxForClick())
+      this._onVersionSelect({ kind: 'current' })
     })
     return item
   }
 
-  _buildCommitItem (v, isHeadClean) {
+  _buildCommitItem (v) {
     const item = document.createElement('div')
-    item.className = 'context-history-item' + (isHeadClean ? ' head-current' : '')
+    item.className = 'context-history-item'
     item.dataset.key = v.sha
     item.title = absoluteDateEs(v.dateIso)
     const subject = v.subject ? escapeHtml(v.subject) : '<em>sin descripción</em>'
     const badge = versionTypeBadge(v)
-    const timeLabel = escapeHtml(relativeTimeEs(v.dateIso))
-    const titleHtml = isHeadClean
-      ? `<span class="context-history-current-tag">Versión actual</span>${timeLabel}`
-      : timeLabel
+    const titleHtml = escapeHtml(relativeTimeEs(v.dateIso))
     item.innerHTML = `
       <div class="context-history-dot"></div>
       <div class="context-history-body">
@@ -168,7 +158,7 @@ export class HistoryModule {
     item.addEventListener('click', () => {
       this._selectedKey = v.sha
       this._applySelection()
-      this._onVersionSelect(v, this._ctxForClick())
+      this._onVersionSelect(v)
     })
     return item
   }

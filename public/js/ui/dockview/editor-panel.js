@@ -10,7 +10,11 @@
  *   baseline must be the post-load markdown to avoid false positives).
  * - The switch between edit and diff modes. Diff selection happens in the
  *   right context pane's history timeline and is pushed in via
- *   `showDiffVersion(version, ctx)`.
+ *   `showDiffVersion(version)`. The panel exits diff mode when the user
+ *   clicks the "Versión actual" entry in that same timeline, which routes to
+ *   `returnToEditor()`. Diffs are computed against the live editor markdown
+ *   (provided to DiffView via a content provider) so in-memory edits are
+ *   always visible in the diff.
  * - Save flow, including a short "just saved" window so the SSE watcher in
  *   `app.js` skips the reload that would otherwise be triggered by our own
  *   PUT.
@@ -19,11 +23,9 @@
 import * as api from '../../api.js'
 import * as storage from '../../storage.js'
 import { panelStore } from '../../state/panel-store.js'
-import { lucideIcon } from '../../infra/dom.js'
-import { basename } from '../../domain/path.js'
 import { DiffView } from '../history/diff-view.js'
+import { notifyEditorDirtyChanged } from '../context-pane/context-host.js'
 
-const SAVED_INDICATOR_MS = 2000
 const JUST_SAVED_WINDOW_MS = 3000
 
 export class EditorPanelRenderer {
@@ -31,38 +33,9 @@ export class EditorPanelRenderer {
     this.element = document.createElement('div')
     this.element.className = 'editor-panel'
 
-    this._header = document.createElement('header')
-    this._header.className = 'editor-header'
-
-    this._breadcrumb = document.createElement('span')
-    this._breadcrumb.className = 'breadcrumb'
-
-    this._actions = document.createElement('div')
-    this._actions.className = 'editor-actions'
-
-    this._indicator = document.createElement('span')
-    this._indicator.className = 'save-indicator'
-
-    this._backBtn = document.createElement('button')
-    this._backBtn.className = 'back-btn hidden'
-    this._backBtn.title = 'Volver al editor'
-    this._backBtn.appendChild(lucideIcon('arrow-left'))
-    this._backBtn.append(' Volver al editor')
-
-    this._saveBtn = document.createElement('button')
-    this._saveBtn.className = 'save-btn hidden'
-    this._saveBtn.textContent = 'Guardar'
-
-    this._actions.appendChild(this._indicator)
-    this._actions.appendChild(this._saveBtn)
-    this._actions.appendChild(this._backBtn)
-    this._header.appendChild(this._breadcrumb)
-    this._header.appendChild(this._actions)
-
     this._editorContainer = document.createElement('div')
     this._editorContainer.className = 'panel-tui-editor'
 
-    this.element.appendChild(this._header)
     this.element.appendChild(this._editorContainer)
 
     this._panelApi = null
@@ -77,26 +50,25 @@ export class EditorPanelRenderer {
   init (params) {
     this._panelApi = params.api
     this._path = params.params.path
-    this._breadcrumb.textContent = this._path
-
-    this._saveBtn.addEventListener('click', () => this.save())
-    this._backBtn.addEventListener('click', () => this._exitDiffMode())
 
     this.loadContent()
   }
 
   /**
    * Show a specific version's diff inside this editor panel. Called from the
-   * right-side context pane when the user clicks a commit.
+   * right-side context pane when the user clicks a commit. The diff is
+   * rendered against the live editor markdown.
    *
    * @param {object} version History version descriptor (sha, status, …).
-   * @param {object} [ctx] Context from the history module (versions list,
-   *   dirty state, untracked flag) so the diff view can render against the
-   *   right base without refetching.
    */
-  showDiffVersion (version, ctx) {
+  showDiffVersion (version) {
     this._enterDiffMode()
-    this._diffView?.showVersion(version, ctx)
+    this._diffView?.showVersion(version)
+  }
+
+  /** Called from the context pane when the user clicks "Versión actual". */
+  returnToEditor () {
+    this._exitDiffMode()
   }
 
   _enterDiffMode () {
@@ -106,6 +78,7 @@ export class EditorPanelRenderer {
     if (!this._diffView) {
       this._diffView = new DiffView()
       this._diffView.setPath(this._path)
+      this._diffView.setCurrentContentProvider(() => this._editor?.getMarkdown() ?? '')
       this._diffView.onAfterRestore = () => {
         this.loadContent()
         this._exitDiffMode()
@@ -114,12 +87,6 @@ export class EditorPanelRenderer {
     }
 
     this.element.classList.add('mode-diff')
-
-    this._indicator.classList.add('hidden')
-    this._saveBtn.classList.add('hidden')
-    this._backBtn.classList.remove('hidden')
-
-    this._breadcrumb.textContent = `Historial: ${basename(this._path)}`
   }
 
   _exitDiffMode () {
@@ -127,16 +94,6 @@ export class EditorPanelRenderer {
     this._mode = 'edit'
 
     this.element.classList.remove('mode-diff')
-
-    this._indicator.classList.remove('hidden')
-    this._backBtn.classList.add('hidden')
-    const s = panelStore.get(this._panelApi?.id)
-    if (s?.isDirty) {
-      this._saveBtn.classList.remove('hidden')
-      this._indicator.textContent = 'Sin guardar'
-    }
-
-    this._breadcrumb.textContent = this._path
 
     requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
   }
@@ -200,9 +157,6 @@ export class EditorPanelRenderer {
       renderer: this,
     })
 
-    this._indicator.textContent = ''
-    this._saveBtn.classList.add('hidden')
-
     this._editor.on('changeMode', (mode) => {
       storage.editMode.set(this._path, mode)
     })
@@ -213,9 +167,8 @@ export class EditorPanelRenderer {
       const dirty = this._editor.getMarkdown() !== this._originalContent
       if (dirty !== s.isDirty) {
         s.isDirty = dirty
-        this._saveBtn.classList.toggle('hidden', !dirty)
-        this._indicator.textContent = dirty ? 'Sin guardar' : ''
         this._panelApi.updateParameters({ dirty })
+        notifyEditorDirtyChanged(this._path)
       }
     })
   }
@@ -237,10 +190,7 @@ export class EditorPanelRenderer {
     clearTimeout(this._justSavedTimer)
     this._justSavedTimer = setTimeout(() => { this._justSaved = false }, JUST_SAVED_WINDOW_MS)
     s.isDirty = false
-    this._saveBtn.classList.add('hidden')
-    this._indicator.textContent = 'Guardado'
     this._panelApi.updateParameters({ dirty: false })
-    setTimeout(() => { this._indicator.textContent = '' }, SAVED_INDICATOR_MS)
   }
 
   /** Returns true if SSE should skip reloading (just saved by this client). */

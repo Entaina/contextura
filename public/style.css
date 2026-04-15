@@ -553,8 +553,10 @@ body .dockview-theme-entaina .dv-tabs-and-actions-container {
   padding: 4px 6px 0;
 }
 
-/* Pestañas inactivas: sin fondo ni borde, solo texto muted. Minimalismo
-   VS Code / Chrome style: el tab solo destaca cuando está activo. */
+/* Pestañas inactivas: mismo folder-tab look que la activa pero
+   apagado — fondo --surface (casi blanco con tinte gris) en lugar
+   del blanco puro, texto --text-subtle. Se leen como "estoy abierta
+   pero no soy la que estás viendo ahora". */
 .dockview-theme-entaina .dv-tab,
 .dockview-theme-entaina .dv-groupview.dv-active-group
   > .dv-tabs-and-actions-container .dv-tabs-container
@@ -562,23 +564,38 @@ body .dockview-theme-entaina .dv-tabs-and-actions-container {
 .dockview-theme-entaina .dv-groupview.dv-inactive-group
   > .dv-tabs-and-actions-container .dv-tabs-container
   > .dv-tab {
-  background-color: transparent !important;
-  color: var(--text-subtle) !important;
-  border: 1px solid transparent;
+  background-color: var(--surface) !important;
+  color: var(--chicago-400) !important;
+  border: 1px solid var(--border);
   border-bottom: none;
   border-radius: 6px 6px 0 0;
   margin-right: 2px;
   margin-bottom: -1px; /* solapa el border-bottom del container */
   padding: 0 14px;
+  font-weight: 400;
   transition: background-color 0.12s, color 0.12s;
 }
 .dockview-theme-entaina .dv-tab:hover {
+  background-color: var(--surface-alt) !important;
   color: var(--text) !important;
 }
+/* Dockview-core inyecta en runtime una regla `.dv-tab:focus::after` /
+   `.dv-tab:focus-within::after { outline: 1px solid ... !important }`
+   que pinta un borde rectangular sobre el pseudo-elemento del tab al
+   recibir foco — no respeta el border-radius del folder tab y queda
+   feo. La neutralizamos atacando específicamente el pseudo. */
+body .dockview-theme-entaina .dv-tab::after,
+body .dockview-theme-entaina .dv-tab:focus::after,
+body .dockview-theme-entaina .dv-tab:focus-within::after,
+body .dockview-theme-entaina .dv-tab:focus-visible::after {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
 
-/* Pestaña activa: fondo blanco (alto contraste sobre el container
-   copperfield-50) + borde chicago-200, efecto "folder tab" pegada al
-   documento por el margin-bottom negativo. */
+/* Pestaña activa del grupo: fondo blanco puro + texto oscuro +
+   font-weight 500. Salta a la vista sobre las inactivas copperfield-100
+   y se funde con el fondo del editor por debajo (margin-bottom -1px). */
 .dockview-theme-entaina .dv-groupview.dv-active-group
   > .dv-tabs-and-actions-container .dv-tabs-container
   > .dv-tab.dv-active-tab,
@@ -587,7 +604,16 @@ body .dockview-theme-entaina .dv-tabs-and-actions-container {
   > .dv-tab.dv-active-tab {
   background-color: var(--background) !important;
   color: var(--text) !important;
-  border-color: var(--border);
+  font-weight: 500 !important;
+}
+.dockview-theme-entaina .dv-groupview.dv-active-group
+  > .dv-tabs-and-actions-container .dv-tabs-container
+  > .dv-tab.dv-active-tab:hover,
+.dockview-theme-entaina .dv-groupview.dv-inactive-group
+  > .dv-tabs-and-actions-container .dv-tabs-container
+  > .dv-tab.dv-active-tab:hover {
+  background-color: var(--background) !important;
+  color: var(--text) !important;
 }
 
 /* Overflow dropdown (chevron + contador de tabs ocultas) — contraste

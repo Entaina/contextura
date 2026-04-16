@@ -231,7 +231,7 @@ export class ChatView {
   async _loadProjectCommands () {
     try {
       const cmds = await api.listCommands()
-      if (cmds.length) this._slashPopup.setProjectCommands(cmds)
+      if (cmds.length) this._slashPopup.setExternalCommands(cmds)
     } catch { /* non-critical */ }
   }
 

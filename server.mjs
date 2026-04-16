@@ -9,6 +9,7 @@
 import { createServer } from 'node:http'
 import { createReadStream, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, existsSync } from 'node:fs'
 import { resolve, dirname, join, extname } from 'node:path'
+import { homedir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 
 import { buildTree, buildFileIndex } from './lib/scanner.mjs'
@@ -54,70 +55,170 @@ function readBody (req) {
   })
 }
 
-/**
- * Scan `.claude/commands/` for custom slash commands.
- * Returns an array of `{ name, description, argumentHint }` objects.
- * Subdirectories map to namespaces, e.g. `git/commit.md` → `git:commit`.
- *
- * @param {string} rootPath  Absolute path to the project root.
- * @returns {{ name: string, description: string, argumentHint?: string }[]}
- */
-function scanClaudeCommands (rootPath) {
-  const commandsDir = join(rootPath, '.claude', 'commands')
-  if (!existsSync(commandsDir)) return []
+// ── Command / skill scanning helpers ──────────────────────────────
 
+/**
+ * Parse YAML frontmatter from a markdown file for description / argument-hint.
+ * @param {string} filePath
+ * @returns {{ description: string, argumentHint?: string }}
+ */
+function parseFrontmatter (filePath) {
+  let description = ''
+  let argumentHint
+  try {
+    const content = readFileSync(filePath, 'utf-8')
+    const fmMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/)
+    if (fmMatch) {
+      const fm = fmMatch[1]
+      const descMatch = fm.match(/^description:\s*["']?(.+?)["']?\s*$/m)
+      if (descMatch) description = descMatch[1].trim()
+      const argMatch = fm.match(/^argument-hint:\s*["']?(.+?)["']?\s*$/m)
+      if (argMatch) argumentHint = argMatch[1].trim()
+    }
+    // Fallback: first non-empty, non-heading line
+    if (!description) {
+      const lines = content.replace(/^---[\s\S]*?---\r?\n?/, '').split('\n')
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (trimmed && !trimmed.startsWith('#')) {
+          description = trimmed.slice(0, 80)
+          break
+        }
+      }
+    }
+  } catch { /* unreadable */ }
+  return { description, argumentHint }
+}
+
+/**
+ * Recursively scan a `commands/` directory for `.md` files.
+ * Subdirectories map to `:` namespaces (e.g. `git/commit.md` → `git:commit`).
+ *
+ * @param {string} dir       Absolute path to a commands/ directory.
+ * @param {string} prefix    Namespace prefix (e.g. plugin name).
+ * @param {string} source    Source tag for the results.
+ * @param {string} [plugin]  Plugin name (only for source=plugin).
+ * @returns {{ name: string, description: string, argumentHint?: string, source: string, plugin?: string }[]}
+ */
+function scanCommandsDir (dir, prefix, source, plugin) {
+  if (!existsSync(dir)) return []
   const results = []
 
-  function walk (dir, prefix) {
+  function walk (d, ns) {
     let entries
-    try { entries = readdirSync(dir) } catch { return }
-
+    try { entries = readdirSync(d) } catch { return }
     for (const entry of entries) {
-      const full = join(dir, entry)
-      let stat
-      try { stat = statSync(full) } catch { continue }
-
-      if (stat.isDirectory()) {
-        walk(full, prefix ? `${prefix}:${entry}` : entry)
+      const full = join(d, entry)
+      let st
+      try { st = statSync(full) } catch { continue }
+      if (st.isDirectory()) {
+        walk(full, ns ? `${ns}:${entry}` : entry)
         continue
       }
-      if (!entry.endsWith('.md')) continue
-
-      const name = prefix
-        ? `${prefix}:${entry.replace(/\.md$/, '')}`
-        : entry.replace(/\.md$/, '')
-
-      // Parse optional YAML frontmatter for description and argument-hint
-      let description = ''
-      let argumentHint
-      try {
-        const content = readFileSync(full, 'utf-8')
-        const fmMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/)
-        if (fmMatch) {
-          const fm = fmMatch[1]
-          const descMatch = fm.match(/^description:\s*(.+)$/m)
-          if (descMatch) description = descMatch[1].trim()
-          const argMatch = fm.match(/^argument-hint:\s*(.+)$/m)
-          if (argMatch) argumentHint = argMatch[1].trim()
-        }
-        // Fallback: use first non-empty, non-heading line as description
-        if (!description) {
-          const lines = content.replace(/^---[\s\S]*?---\r?\n?/, '').split('\n')
-          for (const line of lines) {
-            const trimmed = line.trim()
-            if (trimmed && !trimmed.startsWith('#')) {
-              description = trimmed.slice(0, 80)
-              break
-            }
-          }
-        }
-      } catch { /* unreadable file */ }
-
-      results.push({ name, description, argumentHint })
+      if (!entry.endsWith('.md') || entry.endsWith('.bak')) continue
+      const base = entry.replace(/\.md$/, '')
+      const name = ns ? `${ns}:${base}` : base
+      const fullName = prefix ? `${prefix}:${name}` : name
+      const fm = parseFrontmatter(full)
+      const item = { name: fullName, description: fm.description, source }
+      if (fm.argumentHint) item.argumentHint = fm.argumentHint
+      if (plugin) item.plugin = plugin
+      results.push(item)
     }
   }
 
-  walk(commandsDir, '')
+  walk(dir, '')
+  return results
+}
+
+/**
+ * Scan a `skills/` directory for SKILL.md files.
+ * Each subdirectory with a SKILL.md is a skill entry.
+ *
+ * @param {string} dir       Absolute path to a skills/ directory.
+ * @param {string} prefix    Namespace prefix (e.g. plugin name).
+ * @param {string} source    Source tag.
+ * @param {string} [plugin]  Plugin name.
+ */
+function scanSkillsDir (dir, prefix, source, plugin) {
+  if (!existsSync(dir)) return []
+  const results = []
+  let entries
+  try { entries = readdirSync(dir) } catch { return results }
+  for (const entry of entries) {
+    const skillFile = join(dir, entry, 'SKILL.md')
+    if (!existsSync(skillFile)) continue
+    const fm = parseFrontmatter(skillFile)
+    const name = prefix ? `${prefix}:${entry}` : entry
+    const item = { name, description: fm.description, source }
+    if (fm.argumentHint) item.argumentHint = fm.argumentHint
+    if (plugin) item.plugin = plugin
+    results.push(item)
+  }
+  return results
+}
+
+/**
+ * Find the latest version directory under a plugin's cache folder.
+ * The installPath in installed_plugins.json can be stale (e.g. points to
+ * 0.2.0 when 0.3.0 exists), so we fall back to the newest directory.
+ *
+ * @param {string} installPath  Path from installed_plugins.json.
+ * @returns {string | null}
+ */
+function resolvePluginPath (installPath) {
+  if (existsSync(installPath)) return installPath
+  // Try parent dir → pick latest version folder
+  const parent = dirname(installPath)
+  if (!existsSync(parent)) return null
+  try {
+    const versions = readdirSync(parent)
+      .filter(e => { try { return statSync(join(parent, e)).isDirectory() } catch { return false } })
+      .sort()
+    return versions.length ? join(parent, versions[versions.length - 1]) : null
+  } catch { return null }
+}
+
+/**
+ * Scan all Claude Code command and skill sources.
+ *
+ * @param {string} rootPath  Project root.
+ * @returns {{ name: string, description: string, argumentHint?: string, source: string, plugin?: string }[]}
+ */
+function scanAllCommands (rootPath) {
+  const home = homedir()
+  const results = []
+
+  // 1. Project commands  (<project>/.claude/commands/)
+  results.push(...scanCommandsDir(join(rootPath, '.claude', 'commands'), '', 'project'))
+
+  // 2. User commands  (~/.claude/commands/)
+  results.push(...scanCommandsDir(join(home, '.claude', 'commands'), '', 'user'))
+
+  // 3. User skills  (~/.claude/skills/*/SKILL.md)
+  results.push(...scanSkillsDir(join(home, '.claude', 'skills'), '', 'skill'))
+
+  // 4. Plugin commands + skills (from installed_plugins.json)
+  const pluginsFile = join(home, '.claude', 'plugins', 'installed_plugins.json')
+  if (existsSync(pluginsFile)) {
+    try {
+      const data = JSON.parse(readFileSync(pluginsFile, 'utf-8'))
+      const seen = new Set() // avoid duplicates when same plugin is installed in multiple scopes
+      for (const [key, versions] of Object.entries(data.plugins || {})) {
+        const pluginName = key.split('@')[0]
+        if (seen.has(pluginName)) continue
+        seen.add(pluginName)
+        // Use first entry (highest priority scope)
+        const entry = versions[0]
+        if (!entry?.installPath) continue
+        const resolved = resolvePluginPath(entry.installPath)
+        if (!resolved) continue
+        results.push(...scanCommandsDir(join(resolved, 'commands'), pluginName, 'plugin', pluginName))
+        results.push(...scanSkillsDir(join(resolved, 'skills'), pluginName, 'plugin', pluginName))
+      }
+    } catch { /* malformed JSON or unreadable */ }
+  }
+
   return results.sort((a, b) => a.name.localeCompare(b.name))
 }
 
@@ -394,7 +495,7 @@ export function startServer ({ rootPath, port = 4986, host = '127.0.0.1', userDa
     }
 
     if (pathname === '/api/chat/commands' && req.method === 'GET') {
-      const commands = scanClaudeCommands(ROOT_PATH)
+      const commands = scanAllCommands(ROOT_PATH)
       sendJson(res, 200, commands)
       return
     }

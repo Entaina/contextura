@@ -13,6 +13,17 @@
 
 // ── Command registry ──────────────────────────────────────────────
 
+/** Source labels for popup section headers. */
+const SOURCE_LABELS = {
+  project: 'Project',
+  user: 'User',
+  skill: 'Skills',
+  plugin: 'Plugins',
+}
+
+/** Source ordering for consistent grouping. */
+const SOURCE_ORDER = { builtin: 0, project: 1, user: 2, skill: 3, plugin: 4 }
+
 /** Mode value → CLI flag value. */
 const MODE_MAP = {
   ask: 'default',
@@ -111,22 +122,31 @@ export class SlashCommandPopup {
     this._textarea.addEventListener('input', () => this._onInput())
   }
 
-  /** All commands: built-in + project. */
+  /** All commands: built-in + external, sorted by source group then name. */
   get _allCommands () {
-    return [...BUILTIN_COMMANDS, ...this._projectCommands]
+    const all = [
+      ...BUILTIN_COMMANDS.map(c => ({ ...c, source: 'builtin' })),
+      ...this._projectCommands,
+    ]
+    return all.sort((a, b) => {
+      const sa = SOURCE_ORDER[a.source] ?? 9
+      const sb = SOURCE_ORDER[b.source] ?? 9
+      return sa !== sb ? sa - sb : a.name.localeCompare(b.name)
+    })
   }
 
   /**
-   * Load project commands from the server response.
-   * @param {{ name: string, description: string, argumentHint?: string }[]} cmds
+   * Load external commands/skills from the server response.
+   * @param {{ name: string, description: string, argumentHint?: string, source: string, plugin?: string }[]} cmds
    */
-  setProjectCommands (cmds) {
+  setExternalCommands (cmds) {
     this._projectCommands = cmds.map(c => ({
       name: c.name,
       description: c.description || '',
       args: c.argumentHint,
       passthrough: true,
-      project: true,
+      source: c.source,
+      plugin: c.plugin,
     }))
   }
 
@@ -212,16 +232,16 @@ export class SlashCommandPopup {
 
   _render () {
     this._el.innerHTML = ''
-    let lastWasProject = null
+    let lastSource = null
     this._filtered.forEach((cmd, i) => {
-      // Separator between built-in and project commands
-      if (lastWasProject === false && cmd.project) {
+      const src = cmd.source || 'builtin'
+      if (src !== lastSource && lastSource !== null) {
         const sep = document.createElement('div')
         sep.className = 'chat-cmd-separator'
-        sep.textContent = 'Project commands'
+        sep.textContent = SOURCE_LABELS[src] || src
         this._el.appendChild(sep)
       }
-      lastWasProject = !!cmd.project
+      lastSource = src
 
       const item = document.createElement('div')
       item.className = 'chat-cmd-item'

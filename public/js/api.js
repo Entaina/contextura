@@ -139,3 +139,68 @@ export function cancelChat (sessionId) {
     body: JSON.stringify({ sessionId }),
   })
 }
+
+// ── Conversations ──────────────────────────────────────────────────
+
+/**
+ * List all saved conversations (metadata only, no messages).
+ * @returns {Promise<Array<{id: string, title: string, createdAt: string, updatedAt: string}>>}
+ */
+export async function listConversations () {
+  const res = await fetch('/api/chat/conversations')
+  if (!res.ok) throw new Error(`GET /api/chat/conversations failed: ${res.status}`)
+  return res.json()
+}
+
+/**
+ * Create a new conversation on the server.
+ * @param {string} [title]
+ * @returns {Promise<object>}  The created conversation.
+ */
+export async function createConversation (title) {
+  const res = await fetch('/api/chat/conversations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title }),
+  })
+  if (!res.ok) throw new Error(`POST /api/chat/conversations failed: ${res.status}`)
+  return res.json()
+}
+
+/**
+ * Load a single conversation by id (with messages).
+ * @param {string} id
+ * @returns {Promise<object|null>}
+ */
+export async function loadConversation (id) {
+  const res = await fetch(`/api/chat/conversations/${encodeURIComponent(id)}`)
+  if (!res.ok) return null
+  return res.json()
+}
+
+/**
+ * Save (overwrite) a conversation.
+ * @param {string} id
+ * @param {object} data  `{ sessionId, title, messages }`
+ */
+export async function saveConversation (id, data) {
+  const res = await fetch(`/api/chat/conversations/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error(`PUT /api/chat/conversations/${id} failed: ${res.status}`)
+  return res.json()
+}
+
+/**
+ * Delete a conversation by id.
+ * @param {string} id
+ * @returns {Promise<boolean>}
+ */
+export async function deleteConversation (id) {
+  const res = await fetch(`/api/chat/conversations/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  })
+  return res.ok
+}

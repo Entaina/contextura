@@ -103,6 +103,7 @@ function ensureHistoryModule () {
 function ensureChatView () {
   if (chatView) return
   chatView = new ChatView(chatContainer, { getContext: getContextRef })
+  chatView.restoreLastConversation()
 }
 
 /**

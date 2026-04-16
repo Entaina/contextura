@@ -93,6 +93,16 @@ export const contextPaneTab = {
 }
 
 /**
+ * Active conversation ID in the chat panel (persists across tab switches and restarts).
+ */
+export const activeConversationId = {
+  /** @returns {string | null} */
+  get: () => raw.get('active-conversation-id'),
+  /** @param {string | null} id */
+  set: (id) => id ? raw.set('active-conversation-id', id) : raw.remove('active-conversation-id'),
+}
+
+/**
  * Serialized Dockview layout (panels, splits, sizes). Stored as JSON string.
  */
 export const layout = {

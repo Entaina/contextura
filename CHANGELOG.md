@@ -8,6 +8,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Releases are managed automatically by [release-please](https://github.com/googleapis/release-please)
 from [Conventional Commits](https://www.conventionalcommits.org/) in the git history.
 
+## [0.5.0](https://github.com/Entaina/contextura/compare/v0.4.1...v0.5.0) (2026-04-16)
+
+
+### Features
+
+* **chat:** add conversation session management with history and new session ([bf1fb59](https://github.com/Entaina/contextura/commit/bf1fb59853cc3271386bac9ee98aa537823ed6a5))
+* **chat:** add integrated chat panel powered by Claude CLI ([968a21a](https://github.com/Entaina/contextura/commit/968a21aebecb7a59bcd942bf5767a33adec78e38))
+* **chat:** add options bar and slash commands to chat panel ([951f210](https://github.com/Entaina/contextura/commit/951f2108470aabcdc557a39e2c7e4f45ce9646b2))
+* **chat:** scan slash commands from all Claude Code sources ([1997cb9](https://github.com/Entaina/contextura/commit/1997cb9b07a90fe26173d35baa9a6bcf39e48590))
+
+
+### Bug Fixes
+
+* **chat:** cancel streaming via AbortController instead of server-side cancel ([9a76525](https://github.com/Entaina/contextura/commit/9a76525a19085d3c0f72fb0bdc9baa37f0d081b3))
+* **chat:** remove duplicate display flex from chat-view ([7345bd7](https://github.com/Entaina/contextura/commit/7345bd7556cdd95ebb5fce1afa917af04559da7b))
+* **ci:** install Playwright chromium before e2e tests ([a991e9d](https://github.com/Entaina/contextura/commit/a991e9d8217cf2dd086e89a9a90be2317a4bddb2))
+
+
+### Code Refactoring
+
+* **chat:** move chat from dockview tab to context pane ([a3395da](https://github.com/Entaina/contextura/commit/a3395dae69a43e56c3ec426c12d6bc25c19b9985))
+
 ## [0.4.1](https://github.com/Entaina/contextura/compare/v0.4.0...v0.4.1) (2026-04-15)
 
 

@@ -149,6 +149,9 @@ export class ChatView {
     this._stopBtn.hidden = false
     this._textarea.disabled = true
 
+    const abort = new AbortController()
+    this._abortController = abort
+
     try {
       const payload = {
         message: text,
@@ -156,7 +159,7 @@ export class ChatView {
         context: this._getContext(),
       }
 
-      for await (const chunk of api.streamChat(payload)) {
+      for await (const chunk of api.streamChat(payload, { signal: abort.signal })) {
         if (chunk.error) {
           streaming.appendText(`\n\n**Error:** ${chunk.error}`)
           break
@@ -171,12 +174,15 @@ export class ChatView {
         this._scrollToBottom()
       }
     } catch (err) {
-      streaming.appendText(`\n\n**Error:** ${err.message}`)
+      if (err.name !== 'AbortError') {
+        streaming.appendText(`\n\n**Error:** ${err.message}`)
+      }
     }
 
     streaming.finish()
     this._messages.push({ role: 'assistant', content: streaming.getContent() })
     this._streaming = null
+    this._abortController = null
     this._sendBtn.hidden = false
     this._stopBtn.hidden = true
     this._textarea.disabled = false
@@ -185,8 +191,9 @@ export class ChatView {
   }
 
   _stopStreaming () {
-    if (this._sessionId) {
-      api.cancelChat(this._sessionId)
+    if (this._abortController) {
+      this._abortController.abort()
+      this._abortController = null
     }
   }
 

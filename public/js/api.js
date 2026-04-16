@@ -93,11 +93,12 @@ export function getContentAt (path, rev, revPath) {
  * @param {object} payload  `{ message: string, sessionId?: string, context? }`
  * @yields {{ text?: string, sessionId?: string, result?: string, error?: string }}
  */
-export async function * streamChat (payload) {
+export async function * streamChat (payload, { signal } = {}) {
   const res = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
+    signal,
   })
 
   if (!res.ok) {
@@ -109,17 +110,21 @@ export async function * streamChat (payload) {
   const decoder = new TextDecoder()
   let buffer = ''
 
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    buffer += decoder.decode(value, { stream: true })
-    const lines = buffer.split('\n')
-    buffer = lines.pop()
-    for (const line of lines) {
-      if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-        yield JSON.parse(line.slice(6))
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop()
+      for (const line of lines) {
+        if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+          yield JSON.parse(line.slice(6))
+        }
       }
     }
+  } finally {
+    reader.cancel().catch(() => {})
   }
 }
 

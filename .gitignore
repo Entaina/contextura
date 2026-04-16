@@ -5,3 +5,4 @@ assets/icon-1024.png
 electronegativity.sarif
 test-results/
 playwright-report/
+.claude/worktrees/

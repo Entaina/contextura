@@ -40,6 +40,14 @@ export function initContextPane ({ onLayoutChange }) {
   }
 }
 
+export function openContextPane () {
+  if (!visible) toggleContextPane()
+}
+
+export function isContextPaneVisible () {
+  return visible
+}
+
 export function toggleContextPane () {
   visible = !visible
   paneEl.classList.toggle('collapsed', !visible)

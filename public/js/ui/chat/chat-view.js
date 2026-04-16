@@ -12,17 +12,20 @@
 
 import * as api from '../../api.js'
 import { renderMessage, createStreamingMessage } from './message-renderer.js'
-import { lucideIcon } from '../../infra/dom.js'
+import { lucideIcon, refreshIcons } from '../../infra/dom.js'
 
 export class ChatView {
   /**
    * @param {HTMLElement} container  The element to mount into.
+   * @param {Object} [opts]
+   * @param {() => Object} [opts.getContext]  Returns editor context for the system prompt.
    */
-  constructor (container) {
+  constructor (container, { getContext } = {}) {
     this._container = container
     this._messages = []   // { role, content }[]
     this._sessionId = null
     this._streaming = null // current streaming handle
+    this._getContext = getContext || (() => ({}))
 
     this._build()
   }
@@ -82,6 +85,7 @@ export class ChatView {
     inputRow.appendChild(this._sendBtn)
     inputRow.appendChild(this._stopBtn)
     this._container.appendChild(inputRow)
+    refreshIcons(this._container)
 
     this._checkStatus()
   }
@@ -149,6 +153,7 @@ export class ChatView {
       const payload = {
         message: text,
         sessionId: this._sessionId || undefined,
+        context: this._getContext(),
       }
 
       for await (const chunk of api.streamChat(payload)) {

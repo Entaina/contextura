@@ -83,6 +83,16 @@ export const editMode = {
 }
 
 /**
+ * Active tab inside the right context pane ('history' | 'chat').
+ */
+export const contextPaneTab = {
+  /** @returns {string} */
+  get: () => raw.get('context-pane-tab') || 'history',
+  /** @param {string} tab */
+  set: (tab) => raw.set('context-pane-tab', tab),
+}
+
+/**
  * Serialized Dockview layout (panels, splits, sizes). Stored as JSON string.
  */
 export const layout = {

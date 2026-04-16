@@ -47,15 +47,19 @@ test('chat toggle button is visible in the titlebar', async () => {
   await expect(btn).toHaveAttribute('title', /Chat/)
 })
 
-test('clicking the chat button opens a chat panel in dockview', async () => {
+test('clicking the chat button opens the chat in the right context pane', async () => {
   await page.locator('#btn-toggle-chat').click()
 
-  // The chat panel should appear inside the dockview container
-  const chatView = page.locator('.chat-view')
+  // The chat view should appear inside the context pane
+  const chatView = page.locator('#context-pane .chat-view')
   await expect(chatView).toBeVisible()
 
   // Empty state text should be shown
   await expect(page.locator('.chat-empty-state')).toContainText('Start a conversation')
+
+  // The chat tab in the context pane should be active
+  const chatTab = page.locator('.context-tab.active')
+  await expect(chatTab).toHaveAttribute('title', 'Chat')
 })
 
 test('chat panel has an input area and send button', async () => {
@@ -97,25 +101,27 @@ test('chat input is enabled when claude CLI is available', async () => {
   }
 })
 
-test('clicking the chat button twice does not create a duplicate panel', async () => {
+test('clicking the chat button twice toggles the context pane', async () => {
   await page.locator('#btn-toggle-chat').click()
   await expect(page.locator('.chat-view')).toBeVisible()
 
-  // Click again — should activate the existing one, not create a second
+  // Click again — should collapse the context pane
   await page.locator('#btn-toggle-chat').click()
+  await expect(page.locator('#context-pane')).toHaveClass(/collapsed/)
 
+  // Only one chat view should ever exist
   const chatViews = page.locator('.chat-view')
   await expect(chatViews).toHaveCount(1)
 })
 
-test('chat panel coexists with an editor panel', async () => {
+test('chat in context pane coexists with an editor panel', async () => {
   // Open a file first
   await page.locator('#file-tree [data-path="README.md"]').click()
   await expect(page.locator('#dockview-container')).toContainText('Sample Vault')
 
   // Then open chat
   await page.locator('#btn-toggle-chat').click()
-  await expect(page.locator('.chat-view')).toBeVisible()
+  await expect(page.locator('#context-pane .chat-view')).toBeVisible()
 
   // Both should exist in the DOM
   await expect(page.locator('.chat-view')).toHaveCount(1)

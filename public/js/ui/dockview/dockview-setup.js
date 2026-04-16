@@ -12,7 +12,6 @@ import { panelStore } from '../../state/panel-store.js'
 import { selectionStore } from '../../state/selection-store.js'
 import { basename } from '../../domain/path.js'
 import { EditorPanelRenderer } from './editor-panel.js'
-import { ChatPanelRenderer } from './chat-panel.js'
 import { DirtyTabRenderer, closePanelWithConfirm } from './dirty-tab.js'
 import { WelcomeWatermark } from './welcome.js'
 import { createLayoutStore } from './layout-store.js'
@@ -49,7 +48,6 @@ export function initDockview ({ onActivePanelChange } = {}) {
   const dockview = new DockviewComponent(dockviewContainer, {
     createComponent: (options) => {
       if (options.name === 'editor') return new EditorPanelRenderer()
-      if (options.name === 'chat') return new ChatPanelRenderer()
       return { element: document.createElement('div'), init () {}, dispose () {} }
     },
     createTabComponent: () => new DirtyTabRenderer(),
@@ -150,23 +148,7 @@ export function initDockview ({ onActivePanelChange } = {}) {
     if (last) openFile(last)
   }
 
-  const CHAT_PANEL_ID = '__chat__'
-
-  function toggleChat () {
-    const existing = dockview.panels.find(p => p.id === CHAT_PANEL_ID)
-    if (existing) {
-      existing.api.setActive()
-      return
-    }
-    dockview.addPanel({
-      id: CHAT_PANEL_ID,
-      component: 'chat',
-      title: 'Chat',
-      position: { direction: 'right' },
-    })
-  }
-
   layoutDockview()
 
-  return { dockview, openFile, saveActiveFile, closeActivePanel, layoutDockview, restoreLayoutOrLastFile, toggleChat }
+  return { dockview, openFile, saveActiveFile, closeActivePanel, layoutDockview, restoreLayoutOrLastFile }
 }

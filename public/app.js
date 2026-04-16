@@ -24,8 +24,8 @@ import {
   refreshTree,
 } from './js/ui/tree.js'
 import { initSidebar, toggleSidebar } from './js/ui/sidebar.js'
-import { initContextPane, toggleContextPane } from './js/ui/context-pane/context-pane.js'
-import { initContextHost, setActiveFile, invalidateHistory } from './js/ui/context-pane/context-host.js'
+import { initContextPane, toggleContextPane, openContextPane, isContextPaneVisible } from './js/ui/context-pane/context-pane.js'
+import { initContextHost, setActiveFile, invalidateHistory, activateChatTab, getActiveTab } from './js/ui/context-pane/context-host.js'
 import { initKeybindings } from './js/ui/keybindings.js'
 
 const searchInput = document.getElementById('search-input')
@@ -38,7 +38,49 @@ async function init () {
     onActivePanelChange: (id) => setActiveFile(id),
   })
 
+  function getEditorContext () {
+    const active = dv.dockview?.activePanel
+    const activeId = active?.id || null
+    const activeState = activeId ? panelStore.get(activeId) : null
+    const context = {}
+
+    if (activeId && activeState?.editor) {
+      context.activeFile = activeId
+      try { context.fileContent = activeState.editor.getMarkdown() } catch { /* noop */ }
+    }
+
+    // Selected text — WYSIWYG (ProseMirror) or Markdown (CodeMirror 6)
+    if (activeState?.editor) {
+      try {
+        let selected = ''
+        const pmView = activeState.editor.wwEditor?.view
+        if (pmView) {
+          const { from, to } = pmView.state.selection
+          if (from !== to) selected = pmView.state.doc.textBetween(from, to, '\n')
+        }
+        if (!selected) {
+          const cmView = activeState.editor.mdEditor?.cm
+          if (cmView) {
+            const sel = cmView.state.selection.main
+            if (!sel.empty) selected = cmView.state.sliceDoc(sel.from, sel.to)
+          }
+        }
+        if (selected.trim()) context.selectedText = selected
+      } catch { /* selection API may vary across editor versions */ }
+    }
+
+    // Open files with dirty status
+    const openFiles = []
+    for (const s of panelStore.values()) {
+      openFiles.push({ path: s.path, isDirty: s.isDirty })
+    }
+    if (openFiles.length > 0) context.openFiles = openFiles
+
+    return context
+  }
+
   initContextHost({
+    getContext: getEditorContext,
     onVersionSelect: (path, version) => {
       const active = dv.dockview?.activePanel
       if (!active || active.id !== path) return
@@ -63,7 +105,7 @@ async function init () {
   renderTree(treeStore.get())
   refreshIcons()
 
-  initKeybindings({ save: dv.saveActiveFile, toggleSidebar, toggleContextPane })
+  initKeybindings({ save: dv.saveActiveFile, toggleSidebar, toggleContextPane, toggleChat })
 
   dv.restoreLayoutOrLastFile()
 
@@ -71,7 +113,7 @@ async function init () {
 
   connectSSE(onServerFileChange)
   connectMenuActions(buildMenuHandlers(dv))
-  wireChatButton(dv)
+  wireChatButton()
 }
 
 async function onServerFileChange (data) {
@@ -89,16 +131,24 @@ function buildMenuHandlers (dv) {
     'new-file': () => btnNewFile?.click(),
     'toggle-sidebar': toggleSidebar,
     'toggle-context-pane': toggleContextPane,
-    'toggle-chat': dv.toggleChat,
+    'toggle-chat': toggleChat,
     save: dv.saveActiveFile,
     'close-tab': dv.closeActivePanel,
   }
 }
 
-// Titlebar chat button (wired after init so dv is available)
-function wireChatButton (dv) {
+function toggleChat () {
+  if (isContextPaneVisible() && getActiveTab() === 'chat') {
+    toggleContextPane()
+  } else {
+    openContextPane()
+    activateChatTab()
+  }
+}
+
+function wireChatButton () {
   const btn = document.getElementById('btn-toggle-chat')
-  if (btn) btn.addEventListener('click', dv.toggleChat)
+  if (btn) btn.addEventListener('click', toggleChat)
 }
 
 init().catch(console.error)

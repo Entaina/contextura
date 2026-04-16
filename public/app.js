@@ -71,6 +71,7 @@ async function init () {
 
   connectSSE(onServerFileChange)
   connectMenuActions(buildMenuHandlers(dv))
+  wireChatButton(dv)
 }
 
 async function onServerFileChange (data) {
@@ -88,9 +89,16 @@ function buildMenuHandlers (dv) {
     'new-file': () => btnNewFile?.click(),
     'toggle-sidebar': toggleSidebar,
     'toggle-context-pane': toggleContextPane,
+    'toggle-chat': dv.toggleChat,
     save: dv.saveActiveFile,
     'close-tab': dv.closeActivePanel,
   }
+}
+
+// Titlebar chat button (wired after init so dv is available)
+function wireChatButton (dv) {
+  const btn = document.getElementById('btn-toggle-chat')
+  if (btn) btn.addEventListener('click', dv.toggleChat)
 }
 
 init().catch(console.error)

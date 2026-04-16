@@ -83,3 +83,54 @@ export function getDiff (path, rev, revPath) {
 export function getContentAt (path, rev, revPath) {
   return fetch(`/api/content?${q({ path, rev, revPath })}`)
 }
+
+// ── Chat ────────────────────────────────────────────────────────────
+
+/**
+ * Stream a chat response from the backend (`claude -p` subprocess).
+ * Yields parsed SSE chunks: `{ text }`, `{ sessionId, result }`, or `{ error }`.
+ *
+ * @param {object} payload  `{ message: string, sessionId?: string, context? }`
+ * @yields {{ text?: string, sessionId?: string, result?: string, error?: string }}
+ */
+export async function * streamChat (payload) {
+  const res = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error || `POST /api/chat failed: ${res.status}`)
+  }
+
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    const lines = buffer.split('\n')
+    buffer = lines.pop()
+    for (const line of lines) {
+      if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+        yield JSON.parse(line.slice(6))
+      }
+    }
+  }
+}
+
+/**
+ * Cancel an active chat response.
+ * @param {string} sessionId
+ */
+export function cancelChat (sessionId) {
+  return fetch('/api/chat/cancel', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sessionId }),
+  })
+}

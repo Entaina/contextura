@@ -18,6 +18,10 @@ const DEFAULTS = {
   windowBounds: { width: 1400, height: 900 },
 }
 
+function userDataPath () {
+  return app.getPath('userData')
+}
+
 function loadConfig () {
   const file = configPath()
   if (!existsSync(file)) return { ...DEFAULTS }
@@ -43,4 +47,4 @@ function saveConfig (partial) {
   return next
 }
 
-module.exports = { loadConfig, saveConfig }
+module.exports = { loadConfig, saveConfig, userDataPath }

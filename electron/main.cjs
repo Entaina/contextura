@@ -17,7 +17,7 @@ const { app, BrowserWindow, dialog, Menu, ipcMain, nativeTheme, shell } = requir
 const { basename, join } = require('node:path')
 const { existsSync, statSync } = require('node:fs')
 
-const { loadConfig, saveConfig } = require('./config.cjs')
+const { loadConfig, saveConfig, userDataPath } = require('./config.cjs')
 const { initAutoUpdater } = require('./updater.cjs')
 
 const PRELOAD_PATH = join(__dirname, 'preload.cjs')
@@ -74,7 +74,11 @@ async function swapServer (rootPath) {
     serverHandle = null
   }
   const start = await loadStartServer()
-  serverHandle = await start({ rootPath, port: 0 })
+  serverHandle = await start({
+    rootPath,
+    port: 0,
+    userDataPath: userDataPath(),
+  })
   return serverHandle
 }
 
@@ -176,6 +180,11 @@ function buildMenu () {
           accelerator: 'CmdOrCtrl+Alt+B',
           click: () => sendAction('toggle-context-pane'),
         },
+        {
+          label: 'Toggle Chat',
+          accelerator: 'Shift+CmdOrCtrl+L',
+          click: () => sendAction('toggle-chat'),
+        },
         { type: 'separator' },
         { role: 'reload' },
         { role: 'toggleDevTools' },
@@ -276,7 +285,11 @@ async function bootstrap () {
   }
 
   const start = await loadStartServer()
-  serverHandle = await start({ rootPath, port: 0 })
+  serverHandle = await start({
+    rootPath,
+    port: 0,
+    userDataPath: userDataPath(),
+  })
   buildMenu()
   createWindow(serverHandle.url)
   updateWindowTitle(rootPath)

@@ -44,6 +44,9 @@
       <button id="btn-toggle-context-pane" class="icon-btn" aria-pressed="true" title="Contexto (⌘⌥B)">
         <i data-lucide="panel-right"></i>
       </button>
+      <button id="btn-toggle-chat" class="icon-btn" title="Chat (⇧⌘L)">
+        <i data-lucide="message-circle"></i>
+      </button>
     </div>
   </div>
 
@@ -74,8 +77,9 @@
     <!-- Right resize handle (between main and context pane) -->
     <div id="context-resize-handle" class="resize-handle resize-handle-right"></div>
 
-    <!-- Context pane: per-file contextual modules (history, etc.) -->
+    <!-- Context pane: per-file contextual modules (history, chat) -->
     <aside id="context-pane">
+      <div id="context-pane-tabs"></div>
       <div id="context-pane-body">
         <div class="context-empty">Selecciona un fichero</div>
       </div>

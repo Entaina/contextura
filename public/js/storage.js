@@ -83,6 +83,56 @@ export const editMode = {
 }
 
 /**
+ * Active tab inside the right context pane ('history' | 'chat').
+ */
+export const contextPaneTab = {
+  /** @returns {string} */
+  get: () => raw.get('context-pane-tab') || 'history',
+  /** @param {string} tab */
+  set: (tab) => raw.set('context-pane-tab', tab),
+}
+
+/**
+ * Active conversation ID in the chat panel (persists across tab switches and restarts).
+ */
+export const activeConversationId = {
+  /** @returns {string | null} */
+  get: () => raw.get('active-conversation-id'),
+  /** @param {string | null} id */
+  set: (id) => id ? raw.set('active-conversation-id', id) : raw.remove('active-conversation-id'),
+}
+
+/**
+ * Chat model preference (sonnet | opus | haiku).
+ */
+export const chatModel = {
+  /** @returns {string} */
+  get: () => raw.get('chat-model') || 'sonnet',
+  /** @param {string} v */
+  set: (v) => raw.set('chat-model', v),
+}
+
+/**
+ * Chat thinking effort (low | medium | high | max).
+ */
+export const chatEffort = {
+  /** @returns {string} */
+  get: () => raw.get('chat-effort') || 'high',
+  /** @param {string} v */
+  set: (v) => raw.set('chat-effort', v),
+}
+
+/**
+ * Chat permission mode (default | acceptEdits | bypassPermissions | plan).
+ */
+export const chatMode = {
+  /** @returns {string} */
+  get: () => raw.get('chat-mode') || 'default',
+  /** @param {string} v */
+  set: (v) => raw.set('chat-mode', v),
+}
+
+/**
  * Serialized Dockview layout (panels, splits, sizes). Stored as JSON string.
  */
 export const layout = {

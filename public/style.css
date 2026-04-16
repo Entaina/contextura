@@ -1340,7 +1340,6 @@ body .dockview-theme-entaina .dv-tab:focus-visible::after {
 }
 
 .chat-view {
-  display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;

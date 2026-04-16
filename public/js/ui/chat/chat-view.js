@@ -18,6 +18,8 @@ import * as api from '../../api.js'
 import * as storage from '../../storage.js'
 import { renderMessage, createStreamingMessage } from './message-renderer.js'
 import { lucideIcon, refreshIcons } from '../../infra/dom.js'
+import { COMMANDS, SlashCommandPopup } from './slash-commands.js'
+import { createOptionsBar } from './chat-options.js'
 
 // ── Helpers ────────────────────────────────────────────────────────
 
@@ -121,7 +123,10 @@ export class ChatView {
     this._emptyState.textContent = 'Start a conversation with Claude.'
     this._messageList.appendChild(this._emptyState)
 
-    // -- Input area --
+    // -- Input area (wrapper for popup positioning) --
+    const inputArea = document.createElement('div')
+    inputArea.className = 'chat-input-area'
+
     const inputRow = document.createElement('div')
     inputRow.className = 'chat-input-row'
 
@@ -148,10 +153,49 @@ export class ChatView {
     inputRow.appendChild(this._textarea)
     inputRow.appendChild(this._sendBtn)
     inputRow.appendChild(this._stopBtn)
-    this._container.appendChild(inputRow)
+
+    // -- Options bar (model, effort, mode pills + commands button) --
+    this._options = createOptionsBar({
+      defaults: {
+        model: storage.chatModel.get(),
+        effort: storage.chatEffort.get(),
+        mode: storage.chatMode.get(),
+      },
+      onChange: (key, value) => {
+        if (key === 'model') storage.chatModel.set(value)
+        else if (key === 'effort') storage.chatEffort.set(value)
+        else if (key === 'mode') storage.chatMode.set(value)
+      },
+      onCommandsClick: () => {
+        this._textarea.focus()
+        if (!this._textarea.value.startsWith('/')) {
+          this._textarea.value = '/'
+          this._textarea.dispatchEvent(new Event('input'))
+        }
+        this._slashPopup.show()
+      },
+    })
+
+    // -- Slash command popup --
+    this._slashPopup = new SlashCommandPopup(this._textarea, inputArea, {
+      onExecute: (cmd, arg) => {
+        if (cmd.passthrough) {
+          const text = arg ? `/${cmd.name} ${arg}` : `/${cmd.name}`
+          this._textarea.value = text
+          this._send()
+        } else if (cmd.execute) {
+          cmd.execute(this, arg)
+        }
+      },
+    })
+
+    inputArea.appendChild(inputRow)
+    inputArea.appendChild(this._options.element)
+    this._container.appendChild(inputArea)
     refreshIcons(this._container)
 
     this._checkStatus()
+    this._loadProjectCommands()
   }
 
   // ── Status check ─────────────────────────────────────────────────
@@ -184,9 +228,20 @@ export class ChatView {
     } catch { /* server unreachable, will fail on send */ }
   }
 
+  async _loadProjectCommands () {
+    try {
+      const cmds = await api.listCommands()
+      if (cmds.length) this._slashPopup.setProjectCommands(cmds)
+    } catch { /* non-critical */ }
+  }
+
   // ── Input handling ───────────────────────────────────────────────
 
   _onKeyDown (e) {
+    // Delegate to slash popup when active
+    if (this._slashPopup?.isActive && this._slashPopup.handleKeyDown(e)) {
+      return
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       this._send()
@@ -203,6 +258,20 @@ export class ChatView {
   async _send () {
     const text = this._textarea.value.trim()
     if (!text || this._streaming) return
+
+    // Handle local slash commands
+    if (text.startsWith('/')) {
+      const parts = text.split(/\s+/)
+      const cmdName = parts[0].slice(1).toLowerCase()
+      const cmd = COMMANDS.find(c => c.name === cmdName)
+      if (cmd && !cmd.passthrough) {
+        this._textarea.value = ''
+        this._textarea.style.height = 'auto'
+        const arg = parts.length > 1 ? parts.slice(1).join(' ') : undefined
+        cmd.execute(this, arg)
+        return
+      }
+    }
 
     // Add user message
     this._addMessage({ role: 'user', content: text })
@@ -227,6 +296,9 @@ export class ChatView {
         message: text,
         sessionId: this._sessionId || undefined,
         context: this._getContext(),
+        model: this._options.getModel(),
+        effort: this._options.getEffort(),
+        permissionMode: this._options.getMode(),
       }
 
       for await (const chunk of api.streamChat(payload, { signal: abort.signal })) {
@@ -491,6 +563,23 @@ export class ChatView {
 
   /** Get the current messages array (for persistence). */
   getMessages () { return this._messages.slice() }
+
+  // ── Option setters (called by slash commands) ─────────────────────
+
+  setModel (v) {
+    this._options.setModel(v)
+    storage.chatModel.set(v)
+  }
+
+  setEffort (v) {
+    this._options.setEffort(v)
+    storage.chatEffort.set(v)
+  }
+
+  setMode (v) {
+    this._options.setMode(v)
+    storage.chatMode.set(v)
+  }
 
   dispose () {
     this._stopStreaming()

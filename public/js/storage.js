@@ -103,6 +103,36 @@ export const activeConversationId = {
 }
 
 /**
+ * Chat model preference (sonnet | opus | haiku).
+ */
+export const chatModel = {
+  /** @returns {string} */
+  get: () => raw.get('chat-model') || 'sonnet',
+  /** @param {string} v */
+  set: (v) => raw.set('chat-model', v),
+}
+
+/**
+ * Chat thinking effort (low | medium | high | max).
+ */
+export const chatEffort = {
+  /** @returns {string} */
+  get: () => raw.get('chat-effort') || 'high',
+  /** @param {string} v */
+  set: (v) => raw.set('chat-effort', v),
+}
+
+/**
+ * Chat permission mode (default | acceptEdits | bypassPermissions | plan).
+ */
+export const chatMode = {
+  /** @returns {string} */
+  get: () => raw.get('chat-mode') || 'default',
+  /** @param {string} v */
+  set: (v) => raw.set('chat-mode', v),
+}
+
+/**
  * Serialized Dockview layout (panels, splits, sizes). Stored as JSON string.
  */
 export const layout = {

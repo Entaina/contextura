@@ -7,7 +7,7 @@
  */
 
 import { createServer } from 'node:http'
-import { createReadStream, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { createReadStream, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, existsSync } from 'node:fs'
 import { resolve, dirname, join, extname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -52,6 +52,73 @@ function readBody (req) {
     req.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')))
     req.on('error', reject)
   })
+}
+
+/**
+ * Scan `.claude/commands/` for custom slash commands.
+ * Returns an array of `{ name, description, argumentHint }` objects.
+ * Subdirectories map to namespaces, e.g. `git/commit.md` → `git:commit`.
+ *
+ * @param {string} rootPath  Absolute path to the project root.
+ * @returns {{ name: string, description: string, argumentHint?: string }[]}
+ */
+function scanClaudeCommands (rootPath) {
+  const commandsDir = join(rootPath, '.claude', 'commands')
+  if (!existsSync(commandsDir)) return []
+
+  const results = []
+
+  function walk (dir, prefix) {
+    let entries
+    try { entries = readdirSync(dir) } catch { return }
+
+    for (const entry of entries) {
+      const full = join(dir, entry)
+      let stat
+      try { stat = statSync(full) } catch { continue }
+
+      if (stat.isDirectory()) {
+        walk(full, prefix ? `${prefix}:${entry}` : entry)
+        continue
+      }
+      if (!entry.endsWith('.md')) continue
+
+      const name = prefix
+        ? `${prefix}:${entry.replace(/\.md$/, '')}`
+        : entry.replace(/\.md$/, '')
+
+      // Parse optional YAML frontmatter for description and argument-hint
+      let description = ''
+      let argumentHint
+      try {
+        const content = readFileSync(full, 'utf-8')
+        const fmMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/)
+        if (fmMatch) {
+          const fm = fmMatch[1]
+          const descMatch = fm.match(/^description:\s*(.+)$/m)
+          if (descMatch) description = descMatch[1].trim()
+          const argMatch = fm.match(/^argument-hint:\s*(.+)$/m)
+          if (argMatch) argumentHint = argMatch[1].trim()
+        }
+        // Fallback: use first non-empty, non-heading line as description
+        if (!description) {
+          const lines = content.replace(/^---[\s\S]*?---\r?\n?/, '').split('\n')
+          for (const line of lines) {
+            const trimmed = line.trim()
+            if (trimmed && !trimmed.startsWith('#')) {
+              description = trimmed.slice(0, 80)
+              break
+            }
+          }
+        }
+      } catch { /* unreadable file */ }
+
+      results.push({ name, description, argumentHint })
+    }
+  }
+
+  walk(commandsDir, '')
+  return results.sort((a, b) => a.name.localeCompare(b.name))
 }
 
 /**
@@ -226,7 +293,7 @@ export function startServer ({ rootPath, port = 4986, host = '127.0.0.1', userDa
 
     if (pathname === '/api/chat' && req.method === 'POST') {
       const body = JSON.parse(await readBody(req))
-      const { message, sessionId, context } = body
+      const { message, sessionId, context, model, effort, permissionMode } = body
       if (!message) {
         return sendError(res, 400, 'message is required')
       }
@@ -236,6 +303,9 @@ export function startServer ({ rootPath, port = 4986, host = '127.0.0.1', userDa
           context,
           sessionId,
           message,
+          model,
+          effort,
+          permissionMode,
         })
 
         // Track active session for cancellation
@@ -320,6 +390,12 @@ export function startServer ({ rootPath, port = 4986, host = '127.0.0.1', userDa
         }
       }
       sendJson(res, 200, { cancelled })
+      return
+    }
+
+    if (pathname === '/api/chat/commands' && req.method === 'GET') {
+      const commands = scanClaudeCommands(ROOT_PATH)
+      sendJson(res, 200, commands)
       return
     }
 

@@ -140,6 +140,16 @@ export function cancelChat (sessionId) {
   })
 }
 
+/**
+ * List available slash commands from the project's `.claude/commands/` directory.
+ * @returns {Promise<Array<{name: string, description: string, argumentHint?: string}>>}
+ */
+export async function listCommands () {
+  const res = await fetch('/api/chat/commands')
+  if (!res.ok) return []
+  return res.json()
+}
+
 // ── Conversations ──────────────────────────────────────────────────
 
 /**

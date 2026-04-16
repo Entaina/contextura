@@ -60,6 +60,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - run: npx playwright install chromium
       - run: npm run test:e2e
         env:
           ELECTRON_RUN_AS_NODE: ''

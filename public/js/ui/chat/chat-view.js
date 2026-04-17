@@ -196,6 +196,13 @@ export class ChatView {
 
     this._checkStatus()
     this._loadProjectCommands()
+
+    // Re-check when config changes (e.g. user sets Claude binary in Preferences)
+    if (window.electronAPI?.onConfigChanged) {
+      window.electronAPI.onConfigChanged((key) => {
+        if (key === 'claudeBinaryPath') this._checkStatus()
+      })
+    }
   }
 
   // ── Status check ─────────────────────────────────────────────────
@@ -206,7 +213,15 @@ export class ChatView {
       const status = await res.json()
 
       if (!status.available) {
-        this._statusBar.textContent = 'Claude Code CLI not found. Install it from https://claude.ai/download'
+        this._statusBar.textContent = ''
+        this._statusBar.append('Claude Code CLI not found. Install it from https://claude.ai/download ')
+        if (window.electronAPI?.openPreferences) {
+          const btn = document.createElement('button')
+          btn.textContent = 'Configure…'
+          btn.style.cssText = 'margin-left:8px;cursor:pointer;background:none;border:1px solid currentColor;border-radius:4px;padding:2px 8px;color:inherit;font:inherit'
+          btn.onclick = () => window.electronAPI.openPreferences()
+          this._statusBar.append(btn)
+        }
         this._statusBar.hidden = false
         this._textarea.disabled = true
         this._sendBtn.disabled = true
@@ -220,6 +235,11 @@ export class ChatView {
         this._sendBtn.disabled = true
         return
       }
+
+      // CLI found and authenticated — ensure UI is enabled
+      this._statusBar.hidden = true
+      this._textarea.disabled = false
+      this._sendBtn.disabled = false
 
       if (status.hasApiKey) {
         this._warningBar.textContent = 'ANTHROPIC_API_KEY detected — API billing will be used instead of your subscription.'

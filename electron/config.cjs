@@ -16,6 +16,7 @@ function configPath () {
 const DEFAULTS = {
   rootPath: null,
   windowBounds: { width: 1400, height: 900 },
+  claudeBinaryPath: null,
 }
 
 function userDataPath () {

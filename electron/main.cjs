@@ -78,6 +78,7 @@ async function swapServer (rootPath) {
     rootPath,
     port: 0,
     userDataPath: userDataPath(),
+    claudeBinaryPath: loadConfig().claudeBinaryPath,
   })
   return serverHandle
 }
@@ -102,6 +103,55 @@ async function openFolderFlow () {
   return picked
 }
 
+let prefsWindow = null
+
+function openPreferences () {
+  if (prefsWindow) {
+    prefsWindow.focus()
+    return
+  }
+
+  prefsWindow = new BrowserWindow({
+    width: 480,
+    height: 200,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    title: 'Preferences',
+    parent: mainWindow,
+    modal: false,
+    show: false,
+    webPreferences: {
+      preload: PRELOAD_PATH,
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
+    },
+  })
+
+  const url = `${serverHandle.url}/public/preferences.html`
+  prefsWindow.loadURL(url).catch((err) => {
+    console.error('[main] Failed to load preferences:', err.message)
+    if (prefsWindow) { prefsWindow.destroy(); prefsWindow = null }
+  })
+  prefsWindow.once('ready-to-show', () => prefsWindow.show())
+  prefsWindow.on('closed', () => { prefsWindow = null })
+}
+
+async function pushClaudeBinaryToServer (path) {
+  if (!serverHandle) return
+  try {
+    await fetch(`${serverHandle.url}/api/config/claude-binary`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path }),
+    })
+  } catch (err) {
+    console.warn('[main] Failed to push claude binary path to server:', err.message)
+  }
+}
+
 function buildMenu () {
   const isMac = process.platform === 'darwin'
 
@@ -115,6 +165,12 @@ function buildMenu () {
           label: app.name,
           submenu: [
             { role: 'about' },
+            { type: 'separator' },
+            {
+              label: 'Preferences…',
+              accelerator: 'CmdOrCtrl+,',
+              click: () => { openPreferences() },
+            },
             { type: 'separator' },
             { role: 'services' },
             { type: 'separator' },
@@ -271,6 +327,31 @@ function wireIpc () {
   ipcMain.handle('dialog:openFolder', async () => openFolderFlow())
   ipcMain.handle('app:getRootPath', () => serverHandle?.rootPath || null)
   ipcMain.handle('app:getVersion', () => app.getVersion())
+
+  ipcMain.handle('config:getClaudeBinaryPath', () => {
+    return loadConfig().claudeBinaryPath || null
+  })
+
+  ipcMain.handle('config:browseClaudeBinary', async () => {
+    const parent = prefsWindow || mainWindow
+    const result = await dialog.showOpenDialog(parent, {
+      title: 'Select Claude CLI binary',
+      properties: ['openFile', 'showHiddenFiles', 'treatPackageAsDirectory'],
+    })
+    if (result.canceled || !result.filePaths.length) return null
+    return result.filePaths[0]
+  })
+
+  ipcMain.handle('config:saveClaudeBinaryPath', async (_event, path) => {
+    saveConfig({ claudeBinaryPath: path })
+    await pushClaudeBinaryToServer(path)
+    if (mainWindow) mainWindow.webContents.send('config:changed', 'claudeBinaryPath')
+    return path
+  })
+
+  ipcMain.handle('config:openPreferences', () => {
+    openPreferences()
+  })
 }
 
 async function bootstrap () {
@@ -289,6 +370,7 @@ async function bootstrap () {
     rootPath,
     port: 0,
     userDataPath: userDataPath(),
+    claudeBinaryPath: config.claudeBinaryPath,
   })
   buildMenu()
   createWindow(serverHandle.url)

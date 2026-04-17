@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url'
 import { buildTree, buildFileIndex } from './lib/scanner.mjs'
 import { createWatcher, sseHandler, closeAllConnections } from './lib/watcher.mjs'
 import { getFileHistory, getFileAtRevision, getFileDiff, getUncommittedStatus } from './lib/git-history.mjs'
-import { getStatus as getChatStatus, createSession } from './lib/chat-relay.mjs'
+import { getStatus as getChatStatus, createSession, setClaudeBinaryOverride } from './lib/chat-relay.mjs'
 import * as chatStore from './lib/chat-store.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -232,11 +232,12 @@ function scanAllCommands (rootPath) {
  * @param {string} [opts.userDataPath]   Electron userData dir for chat persistence.
  * @returns {Promise<{port:number, url:string, rootPath:string, stop:()=>Promise<void>}>}
  */
-export function startServer ({ rootPath, port = 4986, host = '127.0.0.1', userDataPath } = {}) {
+export function startServer ({ rootPath, port = 4986, host = '127.0.0.1', userDataPath, claudeBinaryPath } = {}) {
   if (!rootPath) throw new Error('startServer: rootPath is required')
   const ROOT_PATH = resolve(rootPath)
 
   if (userDataPath) chatStore.init(userDataPath)
+  if (claudeBinaryPath) setClaudeBinaryOverride(claudeBinaryPath)
 
   // Active chat sessions (keyed by conversation id or '__default__')
   const activeSessions = new Map()
@@ -387,6 +388,14 @@ export function startServer ({ rootPath, port = 4986, host = '127.0.0.1', userDa
     // ── Chat endpoints ──────────────────────────────────────────────
 
     if (pathname === '/api/chat/status' && req.method === 'GET') {
+      const status = await getChatStatus()
+      sendJson(res, 200, status)
+      return
+    }
+
+    if (pathname === '/api/config/claude-binary' && req.method === 'POST') {
+      const body = JSON.parse(await readBody(req))
+      setClaudeBinaryOverride(body.path)
       const status = await getChatStatus()
       sendJson(res, 200, status)
       return

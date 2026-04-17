@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Preferences</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      font-size: 13px;
+      color: #1d1d1f;
+      background: #f5f5f7;
+      padding: 20px 24px;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    h2 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #6e6e73;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .field label {
+      flex-shrink: 0;
+      width: 110px;
+      text-align: right;
+      color: #1d1d1f;
+    }
+
+    .field input[type="text"] {
+      flex: 1;
+      padding: 5px 8px;
+      border: 1px solid #d2d2d7;
+      border-radius: 6px;
+      font: inherit;
+      background: #fff;
+      color: #1d1d1f;
+      -webkit-user-select: text;
+      user-select: text;
+    }
+
+    .field input[type="text"]:focus {
+      outline: none;
+      border-color: #0071e3;
+      box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.25);
+    }
+
+    .field input[type="text"]::placeholder {
+      color: #aeaeb2;
+    }
+
+    button {
+      padding: 5px 14px;
+      border: 1px solid #d2d2d7;
+      border-radius: 6px;
+      background: #fff;
+      color: #1d1d1f;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button:hover { background: #e8e8ed; }
+    button:active { background: #d2d2d7; }
+
+    button.primary {
+      background: #0071e3;
+      border-color: #0071e3;
+      color: #fff;
+    }
+
+    button.primary:hover { background: #0077ed; }
+    button.primary:active { background: #006edb; }
+    button.primary:disabled {
+      background: #99c9f2;
+      border-color: #99c9f2;
+      cursor: default;
+    }
+
+    .hint {
+      margin-left: 118px;
+      color: #86868b;
+      font-size: 11px;
+      margin-bottom: 20px;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding-top: 12px;
+      border-top: 1px solid #e5e5ea;
+    }
+  </style>
+</head>
+<body>
+  <h2>Claude Code CLI</h2>
+
+  <div class="field">
+    <label for="claude-path">Path to binary:</label>
+    <input type="text" id="claude-path" placeholder="Auto-detect" spellcheck="false" autocomplete="off">
+    <button id="btn-browse" type="button">Browse&hellip;</button>
+  </div>
+
+  <p class="hint">Leave empty to auto-detect from standard install locations.</p>
+
+  <div class="actions">
+    <button id="btn-cancel" type="button">Cancel</button>
+    <button id="btn-save" type="button" class="primary">Save</button>
+  </div>
+
+  <script>
+    const pathInput = document.getElementById('claude-path')
+    const btnBrowse = document.getElementById('btn-browse')
+    const btnCancel = document.getElementById('btn-cancel')
+    const btnSave   = document.getElementById('btn-save')
+
+    let originalValue = ''
+
+    // Load current config
+    window.electronAPI.getClaudeBinaryPath().then(path => {
+      originalValue = path || ''
+      pathInput.value = originalValue
+    })
+
+    btnBrowse.addEventListener('click', async () => {
+      const picked = await window.electronAPI.browseClaudeBinary()
+      if (picked) pathInput.value = picked
+    })
+
+    btnCancel.addEventListener('click', () => {
+      window.close()
+    })
+
+    btnSave.addEventListener('click', async () => {
+      const value = pathInput.value.trim()
+      await window.electronAPI.saveClaudeBinaryPath(value || null)
+      window.close()
+    })
+
+    // Enter saves, Escape cancels
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') btnSave.click()
+      if (e.key === 'Escape') btnCancel.click()
+    })
+  </script>
+</body>
+</html>

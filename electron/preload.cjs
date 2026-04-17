@@ -29,6 +29,25 @@ contextBridge.exposeInMainWorld('electronAPI', {
   /** Get semver of the packaged app. */
   getVersion: () => ipcRenderer.invoke('app:getVersion'),
 
+  /** Get the configured Claude CLI binary path (null = auto-detect). */
+  getClaudeBinaryPath: () => ipcRenderer.invoke('config:getClaudeBinaryPath'),
+
+  /** Open a native file dialog to pick the Claude CLI binary. Returns the path, or null if cancelled. */
+  browseClaudeBinary: () => ipcRenderer.invoke('config:browseClaudeBinary'),
+
+  /** Save the Claude CLI binary path (null to reset to auto-detect). */
+  saveClaudeBinaryPath: (path) => ipcRenderer.invoke('config:saveClaudeBinaryPath', path),
+
+  /** Open the Preferences window. */
+  openPreferences: () => ipcRenderer.invoke('config:openPreferences'),
+
+  /** Subscribe to config changes. Callback receives the changed key. Returns unsubscribe. */
+  onConfigChanged: (callback) => {
+    const listener = (_event, key) => callback(key)
+    ipcRenderer.on('config:changed', listener)
+    return () => ipcRenderer.removeListener('config:changed', listener)
+  },
+
   /**
    * Subscribe to menu-driven actions dispatched from the main process.
    * Returns an unsubscribe function.

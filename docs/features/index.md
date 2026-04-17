@@ -25,6 +25,9 @@ El catálogo está organizado en **módulos** — carpetas que agrupan features 
 - [historial/](historial/index.md): Modo historial inline con línea de tiempo, diff visual estilo Google Docs y restauración
   - Leer al tocar el modo historial
 
+- [chat/](chat/index.md): Chat integrado con asistente — conversaciones, modelo/esfuerzo/modo, comandos rápidos y panel contextual con pestañas
+  - Leer al tocar el chat integrado o el pane contextual derecho
+
 - [plataforma/](plataforma/index.md): Integración nativa con macOS — menú, atajos, auto-update, ventana, configuración
   - Leer al tocar comportamientos específicos de aplicación nativa
 

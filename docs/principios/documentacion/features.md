@@ -5,7 +5,7 @@
 La documentación de `docs/` está dividida en **dos capas** con dueño único, y cada capa es exclusiva del otro tipo de contenido:
 
 - **Capa de features** (`docs/features/**`) — describe **qué** ve y puede hacer el usuario. Incluye flujos de interacción, atajos de teclado, invariantes de producto, persistencia observada desde el usuario y casos borde visibles.
-- **Capa de arquitectura** (`docs/backend.md`, `docs/frontend.md`, `docs/electron.md`, `docs/historial.md`) — describe **cómo** está construido el producto. Incluye librerías, ficheros, funciones, patrones y decisiones técnicas.
+- **Capa de arquitectura** (`docs/backend.md`, `docs/frontend.md`, `docs/electron.md`, `docs/historial.md`, `docs/chat.md`) — describe **cómo** está construido el producto. Incluye librerías, ficheros, funciones, patrones y decisiones técnicas.
 
 [mece.md](mece.md) aplica dentro de cada capa y también entre capas: ningún fichero de una capa puede duplicar contenido propio de la otra.
 

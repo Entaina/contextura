@@ -20,10 +20,11 @@ La fuente única de verdad sobre el producto, la arquitectura y la operación es
 |---|---|
 | Qué es el producto y para quién | [docs/producto.md](docs/producto.md) |
 | Cómo correr la app en dev | [docs/desarrollo.md](docs/desarrollo.md) |
-| Servidor HTTP, endpoints, scanner, watcher | [docs/backend.md](docs/backend.md) |
-| UI, Dockview, Toast UI, dirty tracking | [docs/frontend.md](docs/frontend.md) |
+| Servidor HTTP, endpoints, scanner, watcher, chat relay/store | [docs/backend.md](docs/backend.md) |
+| UI, Dockview, Toast UI, dirty tracking, pane contextual | [docs/frontend.md](docs/frontend.md) |
 | Proceso main de Electron, menú, config, ESM caveats | [docs/electron.md](docs/electron.md) |
 | Historial inline, diffs estilo Google Docs | [docs/historial.md](docs/historial.md) |
+| Chat integrado — relay CLI, store, componentes UI | [docs/chat.md](docs/chat.md) |
 | Integración con el Design System | [docs/design-system.md](docs/design-system.md) |
 | Pipeline de CI, SAST, auditoría de dependencias | [docs/ci.md](docs/ci.md) |
 | Publicar una release, auto-update | [docs/release.md](docs/release.md) |

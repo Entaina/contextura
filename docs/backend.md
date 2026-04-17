@@ -6,9 +6,10 @@ Este documento describe la implementación. Las features de cara al usuario que 
 
 ## `server.mjs`
 
-- Servidor HTTP Node.js puro, exporta `startServer({ rootPath, port, host })`.
+- Servidor HTTP Node.js puro, exporta `startServer({ rootPath, port, host, userDataPath })`.
 - El proceso main de Electron lo invoca vía `await import()` dinámico.
 - Devuelve `{ port, url, rootPath, stop }`. Electron llama a `stop()` antes de cambiar el `rootPath` (flujo de File → Open Folder…).
+- `userDataPath` es el directorio de datos de Electron (`~/Library/Application Support/Contextura`), necesario para la persistencia de conversaciones de chat (ver [chat.md](chat.md)).
 - Sirve los ficheros estáticos de [public/](../public/).
 
 ### Endpoints HTTP
@@ -24,8 +25,17 @@ Este documento describe la implementación. Las features de cara al usuario que 
 | GET | `/api/content` | Contenido en crudo en una revisión concreta |
 | GET | `/api/diff` | Diff unificado entre dos revisiones |
 | GET | `/sse` | Server-Sent Events para el live reload cuando los ficheros cambian |
+| GET | `/api/chat/status` | Estado de disponibilidad del CLI de chat |
+| POST | `/api/chat` | Streaming SSE de chat (subproceso CLI) |
+| POST | `/api/chat/cancel` | Cancela una respuesta de chat activa |
+| GET | `/api/chat/commands` | Lista slash commands del proyecto, usuario, skills y plugins |
+| GET | `/api/chat/conversations` | Lista conversaciones guardadas (metadata) |
+| POST | `/api/chat/conversations` | Crea una conversación |
+| GET | `/api/chat/conversations/:id` | Carga una conversación con mensajes |
+| PUT | `/api/chat/conversations/:id` | Guarda/actualiza una conversación |
+| DELETE | `/api/chat/conversations/:id` | Elimina una conversación |
 
-Los endpoints de historial y diff están respaldados por [historial.md](historial.md), y el SSE de live reload por el watcher descrito más abajo.
+Los endpoints de historial y diff están respaldados por [historial.md](historial.md), los de chat por [chat.md](chat.md), y el SSE de live reload por el watcher descrito más abajo.
 
 ## Path safety
 
@@ -44,3 +54,11 @@ Cualquier operación de fichero que recibe un path del cliente pasa por `safePat
 - Expone `closeAllConnections()`, que el puente Electron invoca para cerrar limpiamente todas las conexiones SSE cuando el usuario cambia de carpeta (`stop()` en la sección de `server.mjs`).
 
 Una nota de implementación: `watcher.mjs` carga chokidar vía `createRequire` en vez de con un `import` ESM. No es cosmético — es parte de la estrategia para esquivar los ESM caveats de Electron 33. Ver [principios/producto/electron-cjs.md](principios/producto/electron-cjs.md) y [electron.md](electron.md).
+
+## Chat Relay — `lib/chat-relay.mjs`
+
+Gestiona subprocesos `claude -p` para el chat integrado. En lugar de llamar a la API de Anthropic directamente, lanza el CLI de Claude Code como child process con `--output-format stream-json`, lo que permite usar la suscripción Pro/Max del usuario. Incluye resolución del binario (PATH + ubicaciones conocidas en macOS + fallback al login shell), detección de autenticación, y una clase `ChatSession` basada en `EventEmitter` que parsea el stream de stdout y emite eventos tipados (text, thinking, tool_start/delta/end, tool_result, result, error). La documentación completa del relay está en [chat.md](chat.md).
+
+## Chat Store — `lib/chat-store.mjs`
+
+Persistencia de conversaciones de chat como ficheros JSON individuales en `{userDataPath}/chats/`. Expone CRUD puro (`init`, `list`, `create`, `load`, `save`, `remove`) sin dependencia de Electron — recibe el directorio base en `init()` y opera con `node:fs` síncrono. La documentación completa del store está en [chat.md](chat.md).

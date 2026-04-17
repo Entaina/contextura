@@ -9,7 +9,7 @@ Este documento describe la implementación. Las features de integración nativa 
 `npm run desktop` lanza `electron/main.cjs`, que:
 
 1. Lee la configuración persistida (`rootPath`, `windowBounds`).
-2. Llama a `startServer({ rootPath, port: 0 })` vía `await import('../server.mjs')`. El puerto 0 hace que Node elija un puerto libre.
+2. Llama a `startServer({ rootPath, port: 0, userDataPath })` vía `await import('../server.mjs')`. El puerto 0 hace que Node elija un puerto libre. `userDataPath` apunta al directorio de datos de la app para que el servidor pueda persistir conversaciones de chat (ver [chat.md](chat.md)).
 3. Crea un `BrowserWindow` y carga el `http://127.0.0.1:<port>` devuelto.
 4. Fija `app.setName('Contextura')` para que el menú y el Dock usen el nombre correcto.
 
@@ -37,6 +37,7 @@ Los clicks del menú nativo disparan `ipcRenderer.send('menu:action', <action>)`
 - `save` → llama a `saveActiveFile()`.
 - `toggle-sidebar` → `toggleSidebar()`.
 - `toggle-history` → alterna `_enterHistoryMode` / `_exitHistoryMode` en el `EditorPanelRenderer` activo. Ver [historial.md](historial.md).
+- `toggle-chat` → abre el pane contextual con la pestaña de chat, o lo colapsa si ya está visible con el chat activo. Ver [chat.md](chat.md).
 
 `Open Folder…` se gestiona directamente en `main.cjs` sin delegar al renderer: diálogo → guardar config → `swapServer` → `win.loadURL`. El flujo resultante que experimenta el usuario está en [features/carpeta-raiz/swap-carpeta.md](features/carpeta-raiz/swap-carpeta.md).
 
@@ -52,6 +53,8 @@ Los clicks del menú nativo disparan `ipcRenderer.send('menu:action', <action>)`
   "windowBounds": { "width": 1400, "height": 900 }
 }
 ```
+
+Además, el subdirectorio `chats/` dentro del mismo directorio de datos almacena las conversaciones del chat integrado como ficheros JSON individuales (ver [chat.md](chat.md)).
 
 Borra el fichero para resetear la app a un estado limpio (el siguiente arranque mostrará el folder picker). El lado de usuario de esta persistencia está en [features/plataforma/config-persistente.md](features/plataforma/config-persistente.md) y [features/plataforma/window-bounds.md](features/plataforma/window-bounds.md).
 

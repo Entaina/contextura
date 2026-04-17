@@ -28,11 +28,11 @@ Para navegar empieza por la tabla de dominios más abajo y usa los criterios de 
 
 ### Arquitectura
 
-- [backend.md](backend.md): Servidor HTTP ([server.mjs](../server.mjs)), endpoints API, path safety, scanner ([lib/scanner.mjs](../lib/scanner.mjs)) y watcher ([lib/watcher.mjs](../lib/watcher.mjs))
+- [backend.md](backend.md): Servidor HTTP ([server.mjs](../server.mjs)), endpoints API, path safety, scanner ([lib/scanner.mjs](../lib/scanner.mjs)), watcher ([lib/watcher.mjs](../lib/watcher.mjs)), chat relay ([lib/chat-relay.mjs](../lib/chat-relay.mjs)) y chat store ([lib/chat-store.mjs](../lib/chat-store.mjs))
   - Leer al tocar cualquier endpoint `/api/*` o el flujo SSE
   - Leer al cambiar cómo se listan ficheros o cómo se detectan cambios en disco
 
-- [frontend.md](frontend.md): [public/app.js](../public/app.js), Dockview, Toast UI, renderers, detección de cambios sin guardar, persistencia en localStorage
+- [frontend.md](frontend.md): [public/app.js](../public/app.js), Dockview, Toast UI, renderers, detección de cambios sin guardar, pane contextual, módulos compartidos (api.js, storage.js), persistencia en localStorage
   - Leer al tocar la implementación de la UI, los paneles, la edición o la persistencia del layout (la experiencia del usuario vive en [features/](features/index.md))
 
 - [electron.md](electron.md): Proceso main ([electron/](../electron/)), menú nativo, puente preload, ESM caveats, ubicación de configuración
@@ -41,6 +41,9 @@ Para navegar empieza por la tabla de dominios más abajo y usa los criterios de 
 
 - [historial.md](historial.md): Implementación técnica del historial — [lib/git-history.mjs](../lib/git-history.mjs), el `HistoryModule` del pane contextual y el `DiffView` del frontend
   - Leer al tocar la implementación del historial (la experiencia del usuario vive en [features/historial/](features/historial/index.md))
+
+- [chat.md](chat.md): Implementación técnica del chat integrado — relay del subproceso CLI ([lib/chat-relay.mjs](../lib/chat-relay.mjs)), almacén de conversaciones ([lib/chat-store.mjs](../lib/chat-store.mjs)) y componentes de la interfaz
+  - Leer al tocar cualquier componente del chat, los endpoints `/api/chat/*` o la integración con el CLI (la experiencia del usuario vive en [features/chat/](features/chat/index.md))
 
 - [design-system.md](design-system.md): Integración con el Entaina Design System vía CDN
   - Leer al tocar estilos globales, variables CSS o la sidebar

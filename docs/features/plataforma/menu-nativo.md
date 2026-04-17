@@ -11,7 +11,7 @@ La barra de menús muestra los grupos habituales:
 - **Contextura** — entrada de la aplicación. Incluye "Acerca de", "Salir" y el resto de entradas canónicas del grupo de aplicación de macOS.
 - **Archivo** — acciones sobre ficheros y carpetas: abrir carpeta, crear un fichero nuevo, guardar el fichero activo.
 - **Edición** — acciones estándar: deshacer, rehacer, cortar, copiar, pegar, seleccionar todo.
-- **Ver** — alternar barra lateral, alternar modo historial, recargar, herramientas de desarrollo, zoom, pantalla completa.
+- **Ver** — alternar barra lateral, alternar chat, alternar modo historial, recargar, herramientas de desarrollo, zoom, pantalla completa.
 - **Ventana** — controles estándar de ventana de macOS.
 - **Ayuda** — enlace al repositorio de Contextura.
 

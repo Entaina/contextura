@@ -16,7 +16,9 @@ Los atajos disponibles son los canónicos del sistema, asociados a las acciones 
 | Cerrar pestaña | ⌘W |
 | Cerrar ventana | ⇧⌘W |
 | Alternar barra lateral | ⌘B |
+| Alternar pane contextual | ⌥⌘B |
 | Alternar modo historial | ⌘H |
+| Alternar chat | ⇧⌘L |
 
 Los atajos de edición estándar (⌘Z/⌘⇧Z para deshacer/rehacer, ⌘X/⌘C/⌘V para cortar/copiar/pegar, ⌘A para seleccionar todo) funcionan dentro del editor como en cualquier aplicación nativa.
 
